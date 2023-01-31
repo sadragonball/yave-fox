@@ -76,11 +76,7 @@ static Instance create_instance() {
 
 int main(int argc, char **argv) {
   concurrent::set_thread_name("Main thread");
-  log_msg("hello Error", Log::Error);
-  log_msg("hello Warning", Log::Warning);
-  log_msg("hello Debug", Log::Debug);
-  log_msg("hello Perf", Log::Perf);
-  log_msg("hello Info", Log::Info);
+
   parse_args(argc, argv);
 
   if (!crashhandler::setup_handler()) {

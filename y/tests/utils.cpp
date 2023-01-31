@@ -21,7 +21,6 @@ SOFTWARE.
 **********************************/
 
 #include <y/utils.h>
-#include <y/utils/log.h>
 #include <y/utils/traits.h>
 
 #include <y/test/test.h>
@@ -57,6 +56,5 @@ y_test_func("utils do_not_destroy") {
   }
   y_test_assert(i == 1);
 }
-
 }
 

@@ -5,3 +5,7 @@
 *.user
 *.spv
 /sponza/
+/venv/
+/cmake-build-debug/
+
+settings.dat

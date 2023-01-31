@@ -26,7 +26,9 @@ SOFTWARE.
 #include <cstdio>
 
 #ifdef Y_OS_WIN
+
 #include <windows.h>
+
 #endif
 
 namespace y {
@@ -34,51 +36,66 @@ namespace y {
 namespace detail {
 void setup_console() {
 #ifdef Y_OS_WIN
-    static bool setup = false;
-    if(!setup) {
-        setup = true;
-        const auto std_out = ::GetStdHandle(STD_OUTPUT_HANDLE);
-        DWORD mode = 0;
-        if(!::GetConsoleMode(std_out, &mode)) {
-            return;
-        }
-        mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-        ::SetConsoleMode(std_out, mode);
+  static bool setup = false;
+  if (!setup) {
+    setup = true;
+    const auto std_out = ::GetStdHandle(STD_OUTPUT_HANDLE);
+    DWORD mode = 0;
+    if (!::GetConsoleMode(std_out, &mode)) {
+      return;
     }
+    mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+
+    ::SetConsoleMode(std_out, mode);
+  }
 #endif
 }
 }
 
 static detail::log_callback callback = nullptr;
-static void* callback_user_data = nullptr;
+static void *callback_user_data = nullptr;
 
 void log_msg(std::string_view msg, Log type) {
-    // https://en.wikipedia.org/wiki/ANSI_escape_code
-    static constexpr std::array<const char*, 5> log_type_str = {{
-        "[info]",
-        "\x1b[33m[warning]\x1b[0m",
-        "\x1b[31m[error]\x1b[0m",
-        "\x1b[94m[debug]\x1b[0m",
-        "\x1b[35m[perf]\x1b[0m"
-    }};
+  // https://en.wikipedia.org/wiki/ANSI_escape_code
+  static constexpr std::array<const char *, 5> log_type_str = {{
+                                                                   "[error]",
+                                                                   "[warning]",
+                                                                   "[debug]",
+                                                                   "[perf]",
+                                                                   "[info]",
+                                                               }};
 
-    detail::setup_console();
+  static constexpr std::array<const char *, 5> log_level_str = {{
+                                                                    "\x1b[31m[error]\x1b[0m",
+                                                                    "\x1b[33m[warning]\x1b[0m",
+                                                                    "\x1b[94m[debug]\x1b[0m",
+                                                                    "\x1b[35m[perf]\x1b[0m",
+                                                                    "[info]",
+                                                                }};
 
-    if(callback && callback(msg, type, callback_user_data)) {
-        return;
-    }
+  detail::setup_console();
 
-    FILE* out_channel = type == Log::Error || type == Log::Warning ? stdout : stderr;
-    std::fprintf(out_channel, "%s %.*s\n", log_type_str[usize(type)], int(msg.size()), msg.data());
+  if (callback && callback(msg, type, callback_user_data)) {
+    return;
+  }
 
-    if(out_channel == stderr) {
-        std::fflush(out_channel);
-    }
+  // ERROR WARN DEBUG PERF INFO
+  static u8 levels[5] = {4, 6, 2, 8, 1};
+  const auto handle = ::GetStdHandle(STD_OUTPUT_HANDLE);
+  u8 color = levels[u8(type)];
+  ::SetConsoleTextAttribute(handle, color);
+
+//  FILE *out_channel = type == Log::Error || type == Log::Warning ? stdout : stderr;
+  std::fprintf(stdout, "%s %.*s\n", log_type_str[usize(type)], int(msg.size()), msg.data());
+
+//  if (out_channel == stderr) {
+//    std::fflush(out_channel);
+//  }
 }
 
-void set_log_callback(detail::log_callback func, void* user_data) {
-    callback = func;
-    callback_user_data = user_data;
+void set_log_callback(detail::log_callback func, void *user_data) {
+  callback = func;
+  callback_user_data = user_data;
 }
 
 }

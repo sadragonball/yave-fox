@@ -28,23 +28,23 @@ SOFTWARE.
 namespace y {
 
 enum class Log {
-    Info,
-    Warning,
-    Error,
-    Debug,
-    Perf
+  Error,
+  Warning,
+  Debug,
+  Perf,
+  Info,
+
 };
 
 void log_msg(std::string_view msg, Log type = Log::Info);
 
-
 namespace detail {
 void setup_console();
 
-using log_callback = bool(*)(std::string_view msg, Log type, void* user_data);
+using log_callback = bool (*)(std::string_view msg, Log type, void *user_data);
 }
 
-void set_log_callback(detail::log_callback func, void* user_data = nullptr);
+void set_log_callback(detail::log_callback func, void *user_data = nullptr);
 
 }
 

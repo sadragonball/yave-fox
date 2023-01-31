@@ -32,66 +32,71 @@ SOFTWARE.
 namespace editor {
 
 struct EditorSettings {
-    core::String world_file = "../world.yw3";
-    core::String asset_store = "../store";
+  core::String world_file = "./world.yw3";
+  core::String asset_store = "./store";
 
-    float max_fps = 60.0f;
+  float max_fps = 60.0f;
 
-    y_reflect(EditorSettings, world_file, asset_store, max_fps)
+  y_reflect(EditorSettings, world_file, asset_store, max_fps)
 };
 
 struct CameraSettings {
-    float z_near = 1.0f;
-    float fov = 60.0f;
+  float z_near = 1.0f;
+  float fov = 60.0f;
 
-    // Houdini
-    float trackball_sensitivity = 6.0f;
-    float dolly_sensitivity = 2.5f;
+  // Houdini
+  float trackball_sensitivity = 6.0f;
+  float dolly_sensitivity = 2.5f;
 
-    // Other camera
-    Key center_on_obj = Key::H;
+  // Other camera
+  Key center_on_obj = Key::H;
 
-    y_reflect(CameraSettings, trackball_sensitivity, dolly_sensitivity,
-              center_on_obj)
+  y_reflect(CameraSettings, trackball_sensitivity, dolly_sensitivity,
+            center_on_obj)
 
 };
 
 struct UiSettings {
-    Key change_gizmo_mode = Key::R;
-    Key change_gizmo_space = Key::Q;
+  Key change_gizmo_mode = Key::R;
+  Key change_gizmo_space = Key::Q;
 
-    bool draw_fps_counter = true;
+  bool draw_fps_counter = true;
 
-    y_reflect(UiSettings, change_gizmo_mode, change_gizmo_space, draw_fps_counter)
+  y_reflect(UiSettings, change_gizmo_mode, change_gizmo_space, draw_fps_counter)
 };
 
 struct PerfSettings {
 };
 
 struct DebugSettings {
-    usize entity_count = 1000;
-    float entity_spacing = 10.0f;
-    bool display_octree = false;
-    bool display_selected_bbox = false;
-    bool display_hidden_entities = false;
-    bool display_debug_drawer = true;
+  usize entity_count = 1000;
+  float entity_spacing = 10.0f;
+  bool display_octree = false;
+  bool display_selected_bbox = false;
+  bool display_hidden_entities = false;
+  bool display_debug_drawer = true;
 
-    y_reflect(DebugSettings, entity_count, entity_spacing, display_octree, display_selected_bbox, display_hidden_entities, display_debug_drawer)
+  y_reflect(DebugSettings,
+            entity_count,
+            entity_spacing,
+            display_octree,
+            display_selected_bbox,
+            display_hidden_entities,
+            display_debug_drawer)
 };
 
-
 class Settings {
-    public:
-        Settings(bool load = true);
-        ~Settings();
+public:
+  Settings(bool load = true);
+  ~Settings();
 
-        EditorSettings editor;
-        CameraSettings camera;
-        UiSettings ui;
-        PerfSettings perf;
-        DebugSettings debug;
+  EditorSettings editor;
+  CameraSettings camera;
+  UiSettings ui;
+  PerfSettings perf;
+  DebugSettings debug;
 
-        y_reflect(Settings, editor, camera, ui, perf, debug)
+  y_reflect(Settings, editor, camera, ui, perf, debug)
 };
 
 }

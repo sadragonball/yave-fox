@@ -24,33 +24,46 @@ SOFTWARE.
 
 #include <yave/ecs/EntityWorld.h>
 
+#include <external/imgui_test_engine/imgui_te_context.h>
+
 #include <y/utils/log.h>
-#include <y/test/test.h>
 
 namespace editor {
 
-y_test_func("Entity world") {
-    ecs::EntityWorld world;
+static core::Vector<core::String> window_names() {
+    core::Vector<core::String> names;
+    const auto& windows = ImGui::GetCurrentContext()->Windows;
+    std::transform(windows.begin(), windows.end(), std::back_inserter(names), [](const ImGuiWindow* w) { return w->Name; });
+    return names;
+}
 
-    world.create_entity(ecs::StaticArchetype<int, double, bool>());
-    world.create_entity(ecs::StaticArchetype<int, double, bool>());
-    world.create_entity(ecs::StaticArchetype<int, double>());
-    world.create_entity(ecs::StaticArchetype<double, bool>());
-    world.create_entity(ecs::StaticArchetype<int>());
+void register_editor_tests(ImGuiTestEngine* engine) {
+    log_msg("Registering ImGui tests", Log::Debug);
 
-    y_test_assert(world.query<int>().size() == 4);
-    y_test_assert(world.query<double>().size() == 4);
-    y_test_assert(world.query<bool>().size() == 3);
+    IM_REGISTER_TEST(engine, "tests", "new scene")->TestFunc = [](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("File/New");
+    };
 
-    y_test_assert(world.query<ecs::Changed<int>>().size() == 4);
+    IM_REGISTER_TEST(engine, "tests", "close all")->TestFunc = [](ImGuiTestContext* ctx) {
+        for(const auto& name : window_names()) {
+            if(ImGuiWindow* window = ctx->GetWindowByRef(name.data())) {
+                if(window->HasCloseButton) {
+                    ctx->UndockWindow(name.data());
+                    ctx->WindowClose(name.data());
+                }
+            }
+        }
+    };
 
-    world.tick();
-
-    y_test_assert(world.query<ecs::Changed<int>>().size() == 0);
-    y_test_assert((world.query<ecs::Mutate<double>, bool>().size()) == 3);
-    y_test_assert(world.query<ecs::Changed<double>>().size() == 3);
-    y_test_assert((world.query<ecs::Changed<double>, ecs::Not<int>>().size()) == 1);
+    IM_REGISTER_TEST(engine, "tests", "open component panel")->TestFunc = [](ImGuiTestContext* ctx) {
+        ctx->ItemClick("**/" ICON_FA_SEARCH "##searchbar");
+        ctx->KeyChars("comp");
+        ctx->KeyPress(ImGuiKey_DownArrow);
+        ctx->KeyPress(ImGuiKey_Enter);
+        ctx->SetRef(ICON_FA_WRENCH " Components##1");
+        //ctx->ItemOpen(ICON_FA_PUZZLE_PIECE " Entity");
+    };
 }
 
 }
-

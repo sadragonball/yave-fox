@@ -33,63 +33,62 @@ SOFTWARE.
 
 #define editor_widget(type, ...)  editor_action_(#type, "Open a new " #type, 0, /* no shortcut */, []{ editor::add_child_widget<type>(); }, __VA_ARGS__)
 
-Y_TODO(change this?)
+Y_TODO(change this ?)
 #define editor_widget_open(type, ...)  editor_action_(#type, "Open a new " #type, EditorAction::CallOnStartUp, /* no shortcut */, []{ editor::add_child_widget<type>(); }, __VA_ARGS__)
 
 namespace editor {
 
 class Widget : NonMovable {
 
-    public:
-        Widget(std::string_view title, int flags = 0);
-        virtual ~Widget();
+public:
+  Widget(std::string_view title, int flags = 0);
+  virtual ~Widget();
 
-        void close();
-        bool is_visible() const;
+  void close();
+  bool is_visible() const;
 
-        void set_visible(bool visible);
+  void set_visible(bool visible);
 
-        void set_parent(Widget* parent);
+  void set_parent(Widget *parent);
 
-        void set_modal(bool modal);
+  void set_modal(bool modal);
 
-        virtual void refresh();
-        virtual void refresh_all();
+  virtual void refresh();
+  virtual void refresh_all();
 
-        void draw_gui_inside();
+  void draw_gui_inside();
 
-    protected:
-        virtual void on_gui();
-        virtual bool before_gui();
-        virtual void after_gui();
+protected:
+  virtual void on_gui();
+  virtual bool before_gui();
+  virtual void after_gui();
 
-        virtual bool should_keep_alive() const;
+  virtual bool should_keep_alive() const;
 
-        math::Vec2ui content_size() const;
+  math::Vec2ui content_size() const;
 
-        void set_flags(int flags);
+  void set_flags(int flags);
 
-    private:
-        friend class UiManager;
+private:
+  friend class UiManager;
 
-        void draw(bool inside);
+  void draw(bool inside);
 
-        void set_id(u64 id);
-        void set_title(std::string_view title);
+  void set_id(u64 id);
+  void set_title(std::string_view title);
 
-        core::String _title_with_id;
+  core::String _title_with_id;
 
-        std::string_view _title;
-        u64 _id = 0;
+  std::string_view _title;
+  u64 _id = 0;
 
-        bool _visible = true;
-        bool _modal = false;
+  bool _visible = true;
+  bool _modal = false;
 
-        Widget* _parent = nullptr;
-        int _flags = 0;
+  Widget *_parent = nullptr;
+  int _flags = 0;
 };
 }
-
 
 #endif // EDITOR_WIDGET_H
 

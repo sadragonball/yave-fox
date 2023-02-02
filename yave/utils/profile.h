@@ -24,6 +24,13 @@ SOFTWARE.
 
 #include <y/concurrent/concurrent.h>
 
+/**
+ * todo: fix this bug.
+ * leak bug work around.
+ */
+ 
+#undef TRACY_ENABLE
+
 #if defined(TRACY_ENABLE) && !defined(YAVE_PROFILING_DISABLED)
 #define YAVE_PROFILING
 #endif
@@ -32,13 +39,11 @@ SOFTWARE.
 #error TRACY_ENABLE should be set if YAVE_PROFILING is set
 #endif
 
-
 #ifdef YAVE_PROFILING
 
 
 // #include <external/tracy/public/tracy/TracyC.h>
 #include <external/tracy/TracyC.h>
-
 
 #if 0
 namespace yave {
@@ -76,19 +81,11 @@ static inline void set_thread_name() {
     ___tracy_emit_zone_text(y_create_name_with_prefix(ctx), y_create_name_with_prefix(args), strlen(y_create_name_with_prefix(args)));          \
 
 
-
-
 #define y_profile_frame_end()       do { ___tracy_emit_frame_mark(nullptr); } while(false)
-
-
 
 #define y_profile_msg(msg)          do { const char* _y_msg = (msg); TracyCMessage(_y_msg, strlen(_y_msg)); } while(false)
 
-
-
 #define y_profile_plot(name, val)   do { static constexpr const char* _y_plot = (name); TracyCPlot(_y_plot, (val)); } while(false)
-
-
 
 #define y_profile()  y_profile_internal(nullptr)
 
@@ -98,12 +95,9 @@ static inline void set_thread_name() {
     y_profile();                                \
     y_profile_internal_set_name(name)
 
-
-
 #define y_profile_arg(arg)                      \
     y_profile();                                \
     y_profile_internal_set_arg(arg)
-
 
 #define y_profile_zone_arg(name, arg)           \
     y_profile_zone(name);                       \
@@ -113,11 +107,8 @@ static inline void set_thread_name() {
     y_profile_dyn_zone(name);                   \
     y_profile_internal_set_arg(arg)
 
-
 #define y_profile_alloc(ptr, size) ___tracy_emit_memory_alloc(ptr, size, 0)
 #define y_profile_free(ptr) ___tracy_emit_memory_free(ptr, 0)
-
-
 
 #define y_profile_unique_lock(inner) [&]() {                            \
         std::unique_lock l(inner, std::defer_lock);                     \
@@ -128,9 +119,6 @@ static inline void set_thread_name() {
         l.lock();                                                       \
         return l;                                                       \
     }()
-
-
-
 
 #else
 
@@ -150,7 +138,6 @@ static inline void set_thread_name() {
 
 #define y_profile_alloc(ptr, size)          do {} while(false)
 #define y_profile_free(ptr)                 do {} while(false)
-
 
 #define y_profile_unique_lock(lock)         std::unique_lock(lock)
 

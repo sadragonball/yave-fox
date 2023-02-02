@@ -34,61 +34,61 @@ namespace editor {
 
 class EngineView final : public Widget {
 
-    editor_widget_open(EngineView, "View")
+  editor_widget_open(EngineView, "View")
 
-    public:
-        enum class RenderView : u32 {
-            Lit,
-            Albedo,
-            Normal,
-            Metallic,
-            Roughness,
+public:
+  enum class RenderView : u32 {
+    Lit,
+    Albedo,
+    Normal,
+    Metallic,
+    Roughness,
 
-            Depth,
+    Depth,
 
-            SSAO,
+    SSAO,
 
-            MaxRenderViews
-        };
+    MaxRenderViews
+  };
 
-        EngineView();
-        ~EngineView() override;
+  EngineView();
+  ~EngineView() override;
 
-    protected:
-        void on_gui() override;
+protected:
+  void on_gui() override;
 
-        bool before_gui() override;
-        void after_gui() override;
+  bool before_gui() override;
+  void after_gui() override;
 
-    private:
-        void draw(CmdBufferRecorder& recorder);
-        void draw_menu_bar();
-        void draw_settings_menu();
-        void draw_gizmo_tool_bar();
+private:
+  void draw(CmdBufferRecorder &recorder);
+  void draw_menu_bar();
+  void draw_settings_menu();
+  void draw_gizmo_tool_bar();
 
-        void update_proj();
-        void update();
-        void update_picking();
+  void update_proj();
+  void update();
+  void update_picking();
 
-        bool is_mouse_inside() const;
-        bool is_focussed() const;
+  bool is_mouse_inside() const;
+  bool is_focussed() const;
 
-        void make_drop_target();
+  void make_drop_target();
 
-        RenderView _view = RenderView::Lit;
+  RenderView _view = RenderView::Lit;
 
-        std::shared_ptr<FrameGraphResourcePool> _resource_pool;
+  std::shared_ptr<FrameGraphResourcePool> _resource_pool;
 
-        EditorRendererSettings _settings;
+  EditorRendererSettings _settings;
 
-        SceneView _scene_view;
-        std::unique_ptr<CameraController> _camera_controller;
+  SceneView _scene_view;
+  std::unique_ptr<CameraController> _camera_controller;
 
-        Gizmo _gizmo;
-        OrientationGizmo _orientation_gizmo;
+  Gizmo _gizmo;
+  OrientationGizmo _orientation_gizmo;
 
-        bool _disable_render = false;
-        isize _resolution = -1;
+  bool _disable_render = false;
+  isize _resolution = -1;
 };
 
 }

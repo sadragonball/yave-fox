@@ -39,383 +39,375 @@ SOFTWARE.
 
 #include <yave/utils/color.h>
 
-#include <editor/utils/ui.h>
-
 namespace editor {
 
 static auto snapping_distances() {
-    return std::array {
-        0.125f,
-        0.25f,
-        0.5f,
-        1.0f,
-        2.5f,
-        5.0f,
-        10.0f,
-    };
+  return std::array{
+      0.125f,
+      0.25f,
+      0.5f,
+      1.0f,
+      2.5f,
+      5.0f,
+      10.0f,
+  };
 }
 
 static auto snapping_angles() {
-    return std::array {
-        1.0f,
-        5.0f,
-        15.0f,
-        30.0f,
-        45.0f,
-        60.0f,
-        90.0f
-    };
+  return std::array{
+      1.0f,
+      5.0f,
+      15.0f,
+      30.0f,
+      45.0f,
+      60.0f,
+      90.0f
+  };
 }
 
 static bool is_clicked() {
-    return ImGui::IsMouseClicked(ImGuiMouseButton_Left) || ImGui::IsMouseClicked(ImGuiMouseButton_Right) || ImGui::IsMouseClicked(ImGuiMouseButton_Middle);
+  return ImGui::IsMouseClicked(ImGuiMouseButton_Left) || ImGui::IsMouseClicked(ImGuiMouseButton_Right)
+      || ImGui::IsMouseClicked(ImGuiMouseButton_Middle);
 }
 
 static auto standard_resolutions() {
-    static std::array<std::pair<const char*, math::Vec2ui>, 3> resolutions = {{
-        {"1080p",   {1920, 1080}},
-        {"1440p",   {2560, 1440}},
-        {"4k",      {3840, 2160}}
-    }};
+  static std::array<std::pair<const char *, math::Vec2ui>, 3> resolutions = {{
+                                                                                 {"1080p", {1920, 1080}},
+                                                                                 {"1440p", {2560, 1440}},
+                                                                                 {"4k", {3840, 2160}}
+                                                                             }};
 
-    return resolutions;
+  return resolutions;
 }
 
-
-
-
-
 EngineView::EngineView() :
-        Widget(ICON_FA_DESKTOP " Engine View", ImGuiWindowFlags_MenuBar),
-        _resource_pool(std::make_shared<FrameGraphResourcePool>()),
-        _scene_view(&current_world()),
-        _camera_controller(std::make_unique<HoudiniCameraController>()),
-        _gizmo(&_scene_view),
-        _orientation_gizmo(&_scene_view) {
+    Widget(ICON_FA_DESKTOP " Engine View", ImGuiWindowFlags_MenuBar),
+    _resource_pool(std::make_shared<FrameGraphResourcePool>()),
+    _scene_view(&current_world()),
+    _camera_controller(std::make_unique<HoudiniCameraController>()),
+    _gizmo(&_scene_view),
+    _orientation_gizmo(&_scene_view) {
 }
 
 EngineView::~EngineView() {
-    application()->unset_scene_view(&_scene_view);
+  application()->unset_scene_view(&_scene_view);
 }
 
 bool EngineView::is_mouse_inside() const {
-    const math::Vec2 mouse_pos = math::Vec2(ImGui::GetIO().MousePos) - math::Vec2(ImGui::GetWindowPos());
-    const auto less = [](const math::Vec2& a, const math::Vec2& b) { return a.x() < b.x() && a.y() < b.y(); };
-    return less(mouse_pos, ImGui::GetWindowContentRegionMax()) && less(ImGui::GetWindowContentRegionMin(), mouse_pos);
+  const math::Vec2 mouse_pos = math::Vec2(ImGui::GetIO().MousePos) - math::Vec2(ImGui::GetWindowPos());
+  const auto less = [](const math::Vec2 &a, const math::Vec2 &b) { return a.x() < b.x() && a.y() < b.y(); };
+  return less(mouse_pos, ImGui::GetWindowContentRegionMax()) && less(ImGui::GetWindowContentRegionMin(), mouse_pos);
 }
 
 bool EngineView::is_focussed() const {
-    return ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
+  return ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
 }
 
 
 // ---------------------------------------------- DRAW ----------------------------------------------
 
 bool EngineView::before_gui() {
-    ImGui::PushStyleColor(ImGuiCol_MenuBarBg, math::Vec4(0.0f));
-    ImGui::PushStyleColor(ImGuiCol_Border, math::Vec4(0.0f));
+  ImGui::PushStyleColor(ImGuiCol_MenuBarBg, math::Vec4(0.0f));
+  ImGui::PushStyleColor(ImGuiCol_Border, math::Vec4(0.0f));
 
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, math::Vec2());
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, math::Vec2());
 
-    return true;
+  return true;
 }
 
 void EngineView::after_gui() {
-    ImGui::PopStyleColor(2);
-    ImGui::PopStyleVar();
+  ImGui::PopStyleColor(2);
+  ImGui::PopStyleVar();
 }
 
-void EngineView::draw(CmdBufferRecorder& recorder) {
-    TextureView* output = nullptr;
-    FrameGraph graph(_resource_pool);
+void EngineView::draw(CmdBufferRecorder &recorder) {
+  TextureView *output = nullptr;
+  FrameGraph graph(_resource_pool);
 
-    const math::Vec2ui output_size = _resolution < 0 ? content_size() : standard_resolutions()[_resolution].second;
-    const EditorRenderer renderer = EditorRenderer::create(graph, _scene_view, output_size, _settings);
+  const math::Vec2ui output_size = _resolution < 0 ? content_size() : standard_resolutions()[_resolution].second;
+  const EditorRenderer renderer = EditorRenderer::create(graph, _scene_view, output_size, _settings);
 
-    {
-        const Texture& white = *device_resources()[DeviceResources::WhiteTexture];
+  {
+    const Texture &white = *device_resources()[DeviceResources::WhiteTexture];
 
-        FrameGraphPassBuilder builder = graph.add_pass("ImGui texture pass");
+    FrameGraphPassBuilder builder = graph.add_pass("ImGui texture pass");
 
-        const auto output_image = builder.declare_image(VK_FORMAT_R8G8B8A8_UNORM, output_size);
+    const auto output_image = builder.declare_image(VK_FORMAT_R8G8B8A8_UNORM, output_size);
 
-        const auto gbuffer = renderer.renderer.gbuffer;
-        builder.add_image_input_usage(output_image, ImageUsage::TextureBit);
-        builder.add_color_output(output_image);
-        builder.add_inline_input(InlineDescriptor(_view), 0);
-        builder.add_uniform_input(renderer.final);
-        builder.add_uniform_input(gbuffer.depth);
-        builder.add_uniform_input(gbuffer.color);
-        builder.add_uniform_input(gbuffer.normal);
-        builder.add_uniform_input_with_default(renderer.renderer.ssao.ao, Descriptor(white));
-        builder.set_render_func([=, &output](RenderPassRecorder& render_pass, const FrameGraphPass* self) {
-                auto out = std::make_unique<TextureView>(self->resources().image<ImageUsage::TextureBit>(output_image));
-                output = out.get();
-                render_pass.keep_alive(std::move(out));
+    const auto gbuffer = renderer.renderer.gbuffer;
+    builder.add_image_input_usage(output_image, ImageUsage::TextureBit);
+    builder.add_color_output(output_image);
+    builder.add_inline_input(InlineDescriptor(_view), 0);
+    builder.add_uniform_input(renderer.final);
+    builder.add_uniform_input(gbuffer.depth);
+    builder.add_uniform_input(gbuffer.color);
+    builder.add_uniform_input(gbuffer.normal);
+    builder.add_uniform_input_with_default(renderer.renderer.ssao.ao, Descriptor(white));
+    builder.set_render_func([=, &output](RenderPassRecorder &render_pass, const FrameGraphPass *self) {
+      auto out = std::make_unique<TextureView>(self->resources().image<ImageUsage::TextureBit>(output_image));
+      output = out.get();
+      render_pass.keep_alive(std::move(out));
 
-                const MaterialTemplate* material = resources()[EditorResources::EngineViewMaterialTemplate];
-                render_pass.bind_material_template(material, self->descriptor_sets()[0]);
-                render_pass.draw_array(3);
-            });
-    }
+      const MaterialTemplate *material = resources()[EditorResources::EngineViewMaterialTemplate];
+      render_pass.bind_material_template(material, self->descriptor_sets()[0]);
+      render_pass.draw_array(3);
+    });
+  }
 
-    if(!_disable_render) {
-        graph.render(recorder);
-    }
+  if (!_disable_render) {
+    graph.render(recorder);
+  }
 
-    if(output) {
-        ImGui::Image(output, content_size());
-    }
+  if (output) {
+    ImGui::Image(output, content_size());
+  }
 }
 
 void EngineView::on_gui() {
-    y_profile();
+  y_profile();
 
-    {
-        ImGui::PopStyleVar();
-        draw_menu_bar();
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, math::Vec2());
-    }
+  {
+    ImGui::PopStyleVar();
+    draw_menu_bar();
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, math::Vec2());
+  }
 
-    if(ImGui::BeginChild("##view")) {
-        update_proj();
-        draw(application()->recorder());
+  if (ImGui::BeginChild("##view")) {
+    update_proj();
+    draw(application()->recorder());
 
-        make_drop_target();
+    make_drop_target();
 
-        _gizmo.draw();
-        _orientation_gizmo.draw();
+    _gizmo.draw();
+    _orientation_gizmo.draw();
 
-        update();
-    }
-    ImGui::EndChild();
+    update();
+  }
+  ImGui::EndChild();
 }
 
 void EngineView::draw_settings_menu() {
-     if(ImGui::BeginMenu("Tone mapping")) {
-        ToneMappingSettings& settings = _settings.renderer_settings.tone_mapping;
-        ImGui::MenuItem("Auto exposure", nullptr, &settings.auto_exposure);
+  if (ImGui::BeginMenu("Tone mapping")) {
+    ToneMappingSettings &settings = _settings.renderer_settings.tone_mapping;
+    ImGui::MenuItem("Auto exposure", nullptr, &settings.auto_exposure);
 
-        // https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/AutomaticExposure/index.html
-        float ev = exposure_to_EV100(settings.exposure);
-        if(ImGui::SliderFloat("EV100", &ev, -10.0f, 10.0f)) {
-            settings.exposure = EV100_to_exposure(ev);
-        }
-
-        if(ImGui::IsItemActive() || ImGui::IsItemHovered()) {
-            ImGui::SetTooltip("Exposure scale = %.3f", settings.exposure);
-        }
-
-        const char* tone_mappers[] = {"ACES", "Uncharted 2", "Reinhard", "None"};
-        if(ImGui::BeginCombo("Tone mapper", tone_mappers[usize(settings.tone_mapper)])) {
-            for(usize i = 0; i != sizeof(tone_mappers) / sizeof(tone_mappers[0]); ++i) {
-                const bool selected = usize(settings.tone_mapper) == i;
-                if(ImGui::Selectable(tone_mappers[i], selected)) {
-                    settings.tone_mapper = ToneMappingSettings::ToneMapper(i);
-                }
-            }
-            ImGui::EndCombo();
-        }
-        ImGui::EndMenu();
+    // https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/AutomaticExposure/index.html
+    float ev = exposure_to_EV100(settings.exposure);
+    if (ImGui::SliderFloat("EV100", &ev, -10.0f, 10.0f)) {
+      settings.exposure = EV100_to_exposure(ev);
     }
 
-    if(ImGui::BeginMenu("SSAO")) {
-        SSAOSettings& settings = _settings.renderer_settings.ssao;
+    if (ImGui::IsItemActive() || ImGui::IsItemHovered()) {
+      ImGui::SetTooltip("Exposure scale = %.3f", settings.exposure);
+    }
 
-        const char* methods[] = {"MiniEngine", "None"};
-        if(ImGui::BeginCombo("SSAO", methods[usize(settings.method)])) {
-            for(usize i = 0; i != sizeof(methods) / sizeof(methods[0]); ++i) {
-                const bool selected = usize(settings.method) == i;
-                if(ImGui::Selectable(methods[i], selected)) {
-                    settings.method = SSAOSettings::SSAOMethod(i);
-                }
-            }
-            ImGui::EndCombo();
+    const char *tone_mappers[] = {"ACES", "Uncharted 2", "Reinhard", "None"};
+    if (ImGui::BeginCombo("Tone mapper", tone_mappers[usize(settings.tone_mapper)])) {
+      for (usize i = 0; i != sizeof(tone_mappers) / sizeof(tone_mappers[0]); ++i) {
+        const bool selected = usize(settings.tone_mapper) == i;
+        if (ImGui::Selectable(tone_mappers[i], selected)) {
+          settings.tone_mapper = ToneMappingSettings::ToneMapper(i);
         }
+      }
+      ImGui::EndCombo();
+    }
+    ImGui::EndMenu();
+  }
 
-        int levels = int(settings.level_count);
-        ImGui::SliderInt("Levels", &levels, 2, 8);
-        ImGui::SliderFloat("Blur tolerance", &settings.blur_tolerance, 1.0f, 8.0f);
-        ImGui::SliderFloat("Upsample tolerance", &settings.upsample_tolerance, 1.0f, 12.0f);
-        ImGui::SliderFloat("Noise filter", &settings.noise_filter_tolerance, 0.0f, 8.0f);
+  if (ImGui::BeginMenu("SSAO")) {
+    SSAOSettings &settings = _settings.renderer_settings.ssao;
 
-        settings.level_count = levels;
-
-        ImGui::EndMenu();
+    const char *methods[] = {"MiniEngine", "None"};
+    if (ImGui::BeginCombo("SSAO", methods[usize(settings.method)])) {
+      for (usize i = 0; i != sizeof(methods) / sizeof(methods[0]); ++i) {
+        const bool selected = usize(settings.method) == i;
+        if (ImGui::Selectable(methods[i], selected)) {
+          settings.method = SSAOSettings::SSAOMethod(i);
+        }
+      }
+      ImGui::EndCombo();
     }
 
-    if(ImGui::BeginMenu("Bloom")) {
-        BloomSettings& settings = _settings.renderer_settings.bloom;
+    int levels = int(settings.level_count);
+    ImGui::SliderInt("Levels", &levels, 2, 8);
+    ImGui::SliderFloat("Blur tolerance", &settings.blur_tolerance, 1.0f, 8.0f);
+    ImGui::SliderFloat("Upsample tolerance", &settings.upsample_tolerance, 1.0f, 12.0f);
+    ImGui::SliderFloat("Noise filter", &settings.noise_filter_tolerance, 0.0f, 8.0f);
 
-        int pyramids = int(settings.pyramids);
-        ImGui::SliderInt("Pyramids", &pyramids, 1, 8);
-        settings.pyramids = usize(pyramids);
+    settings.level_count = levels;
 
-        ImGui::Separator();
+    ImGui::EndMenu();
+  }
 
-        ImGui::SliderFloat("Radius", &settings.radius, 0.001f, 0.01f, "%.3f");
+  if (ImGui::BeginMenu("Bloom")) {
+    BloomSettings &settings = _settings.renderer_settings.bloom;
 
-        ImGui::SliderFloat("Intensity", &settings.intensity, 0.0f, 0.2f, "%.3f");
+    int pyramids = int(settings.pyramids);
+    ImGui::SliderInt("Pyramids", &pyramids, 1, 8);
+    settings.pyramids = usize(pyramids);
 
-        ImGui::EndMenu();
-    }
+    ImGui::Separator();
 
+    ImGui::SliderFloat("Radius", &settings.radius, 0.001f, 0.01f, "%.3f");
 
-    if(ImGui::BeginMenu("Lighting")) {
-        LightingSettings& settings = _settings.renderer_settings.lighting;
+    ImGui::SliderFloat("Intensity", &settings.intensity, 0.0f, 0.2f, "%.3f");
 
-        ImGui::Checkbox("Use compute", &settings.use_compute_for_locals);
+    ImGui::EndMenu();
+  }
 
-        ImGui::EndMenu();
-    }
+  if (ImGui::BeginMenu("Lighting")) {
+    LightingSettings &settings = _settings.renderer_settings.lighting;
+
+    ImGui::Checkbox("Use compute", &settings.use_compute_for_locals);
+
+    ImGui::EndMenu();
+  }
 }
 
 void EngineView::draw_menu_bar() {
-    if(ImGui::BeginMenuBar()) {
-        if(ImGui::BeginMenu("Render")) {
-            ImGui::MenuItem("Editor entities", nullptr, &_settings.show_editor_entities);
+  if (ImGui::BeginMenuBar()) {
+    if (ImGui::BeginMenu("Render")) {
+      ImGui::MenuItem("Editor entities", nullptr, &_settings.show_editor_entities);
 
-            ImGui::Separator();
-            {
-                const char* output_names[] = {
-                        "Lit", "Albedo", "Normals", "Metallic", "Roughness", "Depth", "AO", "GI"
-                    };
-                for(usize i = 0; i != usize(RenderView::MaxRenderViews); ++i) {
-                    bool selected = usize(_view) == i;
-                    ImGui::MenuItem(output_names[i], nullptr, &selected);
-                    if(selected) {
-                        _view = RenderView(i);
-                    }
-                }
-            }
-
-            ImGui::Separator();
-            ImGui::MenuItem("Disable render", nullptr, &_disable_render);
-
-            ImGui::Separator();
-            if(ImGui::BeginMenu("Rendering Settings")) {
-                draw_settings_menu();
-                ImGui::EndMenu();
-            }
-
-            ImGui::EndMenu();
+      ImGui::Separator();
+      {
+        const char *output_names[] = {
+            "Lit", "Albedo", "Normals", "Metallic", "Roughness", "Depth", "AO", "GI"
+        };
+        for (usize i = 0; i != usize(RenderView::MaxRenderViews); ++i) {
+          bool selected = usize(_view) == i;
+          ImGui::MenuItem(output_names[i], nullptr, &selected);
+          if (selected) {
+            _view = RenderView(i);
+          }
         }
+      }
 
-        if(ImGui::BeginMenu("Camera")) {
-            if(ImGui::MenuItem("Reset camera")) {
-                _scene_view.camera().set_view(Camera().view_matrix());
-            }
-            ImGui::EndMenu();
-        }
+      ImGui::Separator();
+      ImGui::MenuItem("Disable render", nullptr, &_disable_render);
 
-        if(ImGui::BeginMenu("Resolution")) {
-            if(ImGui::MenuItem("Viewport", "", _resolution < 0)) {
-                _resolution = -1;
-            }
-            ImGui::Separator();
+      ImGui::Separator();
+      if (ImGui::BeginMenu("Rendering Settings")) {
+        draw_settings_menu();
+        ImGui::EndMenu();
+      }
 
-            const auto resolutions = standard_resolutions();
-            for(isize i = 0; i != isize(resolutions.size()); ++i) {
-                if(ImGui::MenuItem(resolutions[i].first, "", _resolution == i)) {
-                    _resolution = i;
-                }
-            }
-
-            ImGui::EndMenu();
-        }
-
-        draw_gizmo_tool_bar();
-
-        if(_resolution >= 0) {
-            ImGui::Separator();
-            ImGui::TextUnformatted(standard_resolutions()[_resolution].first);
-        }
-
-        ImGui::EndMenuBar();
+      ImGui::EndMenu();
     }
+
+    if (ImGui::BeginMenu("Camera")) {
+      if (ImGui::MenuItem("Reset camera")) {
+        _scene_view.camera().set_view(Camera().view_matrix());
+      }
+      ImGui::EndMenu();
+    }
+
+    if (ImGui::BeginMenu("Resolution")) {
+      if (ImGui::MenuItem("Viewport", "", _resolution < 0)) {
+        _resolution = -1;
+      }
+      ImGui::Separator();
+
+      const auto resolutions = standard_resolutions();
+      for (isize i = 0; i != isize(resolutions.size()); ++i) {
+        if (ImGui::MenuItem(resolutions[i].first, "", _resolution == i)) {
+          _resolution = i;
+        }
+      }
+
+      ImGui::EndMenu();
+    }
+
+    draw_gizmo_tool_bar();
+
+    if (_resolution >= 0) {
+      ImGui::Separator();
+      ImGui::TextUnformatted(standard_resolutions()[_resolution].first);
+    }
+
+    ImGui::EndMenuBar();
+  }
 }
 
 void EngineView::draw_gizmo_tool_bar() {
-    ImGui::Separator();
+  ImGui::Separator();
 
-    auto gizmo_mode = _gizmo.mode();
-    auto gizmo_space = _gizmo.space();
-    auto snapping = _gizmo.snapping();
-    auto rot_snap = _gizmo.rotation_snapping();
-    bool center = _gizmo.center_on_object();
+  auto gizmo_mode = _gizmo.mode();
+  auto gizmo_space = _gizmo.space();
+  auto snapping = _gizmo.snapping();
+  auto rot_snap = _gizmo.rotation_snapping();
+  bool center = _gizmo.center_on_object();
 
-    {
-        if(ImGui::MenuItem(ICON_FA_ARROWS_ALT, nullptr, false, gizmo_mode != Gizmo::Translate)) {
-            gizmo_mode = Gizmo::Translate;
-        }
-        if(ImGui::MenuItem(ICON_FA_SYNC_ALT, nullptr, false, gizmo_mode != Gizmo::Rotate)) {
-            gizmo_mode = Gizmo::Rotate;
-        }
+  {
+    if (ImGui::MenuItem(ICON_FA_ARROWS_ALT, nullptr, false, gizmo_mode != Gizmo::Translate)) {
+      gizmo_mode = Gizmo::Translate;
     }
-
-    ImGui::Separator();
-
-    {
-        if(ImGui::MenuItem(ICON_FA_MOUNTAIN, nullptr, false, gizmo_space != Gizmo::World)) {
-            gizmo_space = Gizmo::World;
-        }
-        if(ImGui::MenuItem(ICON_FA_CUBE, nullptr, false, gizmo_space != Gizmo::Local)) {
-            gizmo_space = Gizmo::Local;
-        }
+    if (ImGui::MenuItem(ICON_FA_SYNC_ALT, nullptr, false, gizmo_mode != Gizmo::Rotate)) {
+      gizmo_mode = Gizmo::Rotate;
     }
+  }
 
-    ImGui::Separator();
+  ImGui::Separator();
 
-    {
-        if(ImGui::BeginMenu(ICON_FA_MAGNET)) {
-            std::array<char, 16> buffer = {};
-
-            for(const float d : snapping_distances()) {
-                std::snprintf(buffer.data(), buffer.size(), "%g m", d);
-                const bool selected = d == snapping;
-                if(ImGui::MenuItem(buffer.data(), nullptr, selected)) {
-                    snapping = selected ? 0.0f : d;
-                }
-            }
-
-            ImGui::Separator();
-
-            for(const float d : snapping_angles()) {
-                std::snprintf(buffer.data(), buffer.size(), "%g°", d);
-                const float angle = math::to_rad(d);
-                const bool selected = angle == rot_snap;
-                if(ImGui::MenuItem(buffer.data(), nullptr, selected)) {
-                    rot_snap = selected ? 0.0f : angle;
-                }
-            }
-
-            ImGui::EndMenu();
-        }
+  {
+    if (ImGui::MenuItem(ICON_FA_MOUNTAIN, nullptr, false, gizmo_space != Gizmo::World)) {
+      gizmo_space = Gizmo::World;
     }
-
-    {
-        if(ImGui::MenuItem(ICON_FA_CROSSHAIRS, nullptr, center)) {
-            center = !center;
-        }
+    if (ImGui::MenuItem(ICON_FA_CUBE, nullptr, false, gizmo_space != Gizmo::Local)) {
+      gizmo_space = Gizmo::Local;
     }
+  }
 
+  ImGui::Separator();
 
+  {
+    if (ImGui::BeginMenu(ICON_FA_MAGNET)) {
+      std::array<char, 16> buffer = {};
 
-    if(is_focussed()) {
-        const UiSettings& settings = app_settings().ui;
-        if(ImGui::IsKeyReleased(to_imgui_key(settings.change_gizmo_mode))) {
-            gizmo_mode = Gizmo::Mode(!usize(gizmo_mode));
+      for (const float d : snapping_distances()) {
+        std::snprintf(buffer.data(), buffer.size(), "%g m", d);
+        const bool selected = d == snapping;
+        if (ImGui::MenuItem(buffer.data(), nullptr, selected)) {
+          snapping = selected ? 0.0f : d;
         }
-        if(ImGui::IsKeyReleased(to_imgui_key(settings.change_gizmo_space))) {
-            gizmo_space = Gizmo::Space(!usize(gizmo_space));
+      }
+
+      ImGui::Separator();
+
+      for (const float d : snapping_angles()) {
+        std::snprintf(buffer.data(), buffer.size(), "%g°", d);
+        const float angle = math::to_rad(d);
+        const bool selected = angle == rot_snap;
+        if (ImGui::MenuItem(buffer.data(), nullptr, selected)) {
+          rot_snap = selected ? 0.0f : angle;
         }
+      }
+
+      ImGui::EndMenu();
     }
+  }
 
-    _gizmo.set_mode(gizmo_mode);
-    _gizmo.set_space(gizmo_space);
-    _gizmo.set_snapping(snapping);
-    _gizmo.set_rotation_snapping(rot_snap);
-    _gizmo.set_center_on_object(center);
+  {
+    if (ImGui::MenuItem(ICON_FA_CROSSHAIRS, nullptr, center)) {
+      center = !center;
+    }
+  }
+
+  if (is_focussed()) {
+    const UiSettings &settings = app_settings().ui;
+    if (ImGui::IsKeyReleased(to_imgui_key(settings.change_gizmo_mode))) {
+      gizmo_mode = Gizmo::Mode(!usize(gizmo_mode));
+    }
+    if (ImGui::IsKeyReleased(to_imgui_key(settings.change_gizmo_space))) {
+      gizmo_space = Gizmo::Space(!usize(gizmo_space));
+    }
+  }
+
+  _gizmo.set_mode(gizmo_mode);
+  _gizmo.set_space(gizmo_space);
+  _gizmo.set_snapping(snapping);
+  _gizmo.set_rotation_snapping(rot_snap);
+  _gizmo.set_center_on_object(center);
 }
 
 
@@ -424,75 +416,75 @@ void EngineView::draw_gizmo_tool_bar() {
 // ---------------------------------------------- UPDATE ----------------------------------------------
 
 void EngineView::update() {
-    _gizmo.set_allow_drag(true);
+  _gizmo.set_allow_drag(true);
 
-    const bool hovered = ImGui::IsWindowHovered() && is_mouse_inside();
+  const bool hovered = ImGui::IsWindowHovered() && is_mouse_inside();
 
-    bool focussed = ImGui::IsWindowFocused();
-    if(hovered && is_clicked()) {
-        ImGui::SetWindowFocus();
-        update_picking();
-        focussed = true;
+  bool focussed = ImGui::IsWindowFocused();
+  if (hovered && is_clicked()) {
+    ImGui::SetWindowFocus();
+    update_picking();
+    focussed = true;
+  }
+
+  if (focussed) {
+    application()->set_scene_view(&_scene_view);
+  }
+
+  if (hovered && !_gizmo.is_dragging() && !_orientation_gizmo.is_dragging() && _camera_controller) {
+    auto &camera = _scene_view.camera();
+    _camera_controller->process_generic_shortcuts(camera);
+    if (focussed) {
+      _camera_controller->update_camera(camera, content_size());
     }
-
-    if(focussed) {
-        application()->set_scene_view(&_scene_view);
-    }
-
-    if(hovered && !_gizmo.is_dragging() && !_orientation_gizmo.is_dragging() && _camera_controller) {
-        auto& camera = _scene_view.camera();
-        _camera_controller->process_generic_shortcuts(camera);
-        if(focussed) {
-            _camera_controller->update_camera(camera, content_size());
-        }
-    }
+  }
 }
 
 void EngineView::update_proj() {
-    const CameraSettings& settings = app_settings().camera;
-    math::Vec2ui viewport_size = content_size();
+  const CameraSettings &settings = app_settings().camera;
+  math::Vec2ui viewport_size = content_size();
 
-    const float fov = math::to_rad(settings.fov);
-    const auto proj = math::perspective(fov, float(viewport_size.x()) / float(viewport_size.y()), settings.z_near);
-    _scene_view.camera().set_proj(proj);
+  const float fov = math::to_rad(settings.fov);
+  const auto proj = math::perspective(fov, float(viewport_size.x()) / float(viewport_size.y()), settings.z_near);
+  _scene_view.camera().set_proj(proj);
 }
 
-
 void EngineView::update_picking() {
-    const math::Vec2ui viewport_size = content_size();
-    const math::Vec2 offset = ImGui::GetWindowPos();
-    const math::Vec2 mouse = ImGui::GetIO().MousePos;
-    const math::Vec2 uv = (mouse - offset - math::Vec2(ImGui::GetWindowContentRegionMin())) / math::Vec2(viewport_size);
+  const math::Vec2ui viewport_size = content_size();
+  const math::Vec2 offset = ImGui::GetWindowPos();
+  const math::Vec2 mouse = ImGui::GetIO().MousePos;
+  const math::Vec2 uv = (mouse - offset - math::Vec2(ImGui::GetWindowContentRegionMin())) / math::Vec2(viewport_size);
 
-    if(uv.x() < 0.0f || uv.y() < 0.0f ||
-       uv.x() > 1.0f || uv.y() > 1.0f) {
+  if (uv.x() < 0.0f || uv.y() < 0.0f ||
+      uv.x() > 1.0f || uv.y() > 1.0f) {
 
-        return;
+    return;
+  }
+
+  const PickingResult picking_data = Picker::pick_sync(_scene_view, uv, viewport_size);
+  if (_camera_controller && _camera_controller->viewport_clicked(picking_data)) {
+    // event has been eaten by the camera controller, don't proceed further
+    _gizmo.set_allow_drag(false);
+    return;
+  }
+
+  if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+    if (!_gizmo.is_dragging() && !_orientation_gizmo.is_dragging()) {
+      const ecs::EntityId
+          picked_id = picking_data.hit() ? current_world().id_from_index(picking_data.entity_index) : ecs::EntityId();
+      current_world().toggle_selected(picked_id, !ImGui::GetIO().KeyCtrl);
     }
-
-    const PickingResult picking_data = Picker::pick_sync(_scene_view, uv, viewport_size);
-    if(_camera_controller && _camera_controller->viewport_clicked(picking_data)) {
-        // event has been eaten by the camera controller, don't proceed further
-        _gizmo.set_allow_drag(false);
-        return;
-    }
-
-    if(ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-        if(!_gizmo.is_dragging() && !_orientation_gizmo.is_dragging()) {
-            const ecs::EntityId picked_id = picking_data.hit() ? current_world().id_from_index(picking_data.entity_index) : ecs::EntityId();
-            current_world().toggle_selected(picked_id, !ImGui::GetIO().KeyCtrl);
-        }
-    }
+  }
 }
 
 void EngineView::make_drop_target() {
-    if(ImGui::BeginDragDropTarget()) {
-        if(const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(imgui::drag_drop_path_id)) {
-            const std::string_view name = reinterpret_cast<const char*>(payload->Data);
-            current_world().set_selected(current_world().add_prefab(name));
-        }
-        ImGui::EndDragDropTarget();
+  if (ImGui::BeginDragDropTarget()) {
+    if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload(imgui::drag_drop_path_id)) {
+      const std::string_view name = reinterpret_cast<const char *>(payload->Data);
+      current_world().set_selected(current_world().add_prefab(name));
     }
+    ImGui::EndDragDropTarget();
+  }
 }
 
 }

@@ -59,6 +59,7 @@ function(optimize_shaders SHADER_TARGET)
     foreach (SHADER ${SHADER_BINARIES})
         add_custom_command(TARGET ${SHADER_TARGET} POST_BUILD COMMAND spirv-opt ${SHADER} -O --preserve-bindings -o ${SHADER})
     endforeach ()
+    message(NOTICE "optimizing shaders...")
 endfunction(optimize_shaders)
 
 

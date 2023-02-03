@@ -29,24 +29,23 @@ SOFTWARE.
 #include <y/core/Vector.h>
 #include <y/core/HashMap.h>
 
-
 namespace editor {
 
 class EntityView final : public Widget {
 
-    editor_widget_open(EntityView, "View")
+  //editor_widget_open(EntityView, "View")
 
-    public:
-        EntityView();
+public:
+  EntityView();
 
-    protected:
-        void on_gui() override;
+protected:
+  void on_gui() override;
 
-    private:
-        ecs::EntityId _context_menu_entity;
+private:
+  ecs::EntityId _context_menu_entity;
 
-        core::Vector<std::pair<const char*, core::String>> _tag_buttons;
-        core::FlatHashMap<ecs::EntityId, bool> _open_nodes;
+  core::Vector<std::pair<const char *, core::String>> _tag_buttons;
+  core::FlatHashMap<ecs::EntityId, bool> _open_nodes;
 };
 
 }

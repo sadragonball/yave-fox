@@ -41,61 +41,61 @@ namespace editor {
 
 class ImGuiEventHandler;
 
-ImGuiPlatform* imgui_platform();
+ImGuiPlatform *imgui_platform();
 
 class ImGuiPlatform : NonMovable {
 
-    struct PlatformWindow : NonMovable {
-        PlatformWindow(ImGuiPlatform* parent, Window::Flags flags);
+  struct PlatformWindow : NonMovable {
+    PlatformWindow(ImGuiPlatform *parent, Window::Flags flags);
 
-        bool render(ImGuiViewport* viewport);
+    bool render(ImGuiViewport *viewport);
 
-        ImGuiPlatform* platform = nullptr;
+    ImGuiPlatform *platform = nullptr;
 
-        Window window;
-        Swapchain swapchain;
-        std::unique_ptr<ImGuiEventHandler> event_handler;
-    };
+    Window window;
+    Swapchain swapchain;
+    std::unique_ptr<ImGuiEventHandler> event_handler;
+  };
 
-    public:
-        using OnGuiFunc = std::function<void(CmdBufferRecorder&)>;
+public:
+  using OnGuiFunc = std::function<void(CmdBufferRecorder &)>;
 
-        ImGuiPlatform(bool multi_viewport = true, bool run_tests = false);
-        ~ImGuiPlatform();
+  ImGuiPlatform(bool multi_viewport = false, bool run_tests = false);
+  ~ImGuiPlatform();
 
-        static ImGuiPlatform* instance();
+  static ImGuiPlatform *instance();
 
-        const ImGuiRenderer* renderer() const;
+  const ImGuiRenderer *renderer() const;
 
-        Window* main_window();
+  Window *main_window();
 
-        void exec(OnGuiFunc func = nullptr);
+  void exec(OnGuiFunc func = nullptr);
 
-        void show_demo();
+  void show_demo();
 
-    private:
-        friend struct PlatformWindow;
+private:
+  friend struct PlatformWindow;
 
-        void close_window(PlatformWindow* window);
+  void close_window(PlatformWindow *window);
 
-        static ImGuiPlatform* get_platform();
-        static Window* get_window(ImGuiViewport* vp);
-        static PlatformWindow* get_platform_window(ImGuiViewport* vp);
+  static ImGuiPlatform *get_platform();
+  static Window *get_window(ImGuiViewport *vp);
+  static PlatformWindow *get_platform_window(ImGuiViewport *vp);
 
-    private:
-        static ImGuiPlatform* _instance;
+private:
+  static ImGuiPlatform *_instance;
 
-        std::unique_ptr<PlatformWindow> _main_window;
-        core::Vector<std::unique_ptr<PlatformWindow>> _windows;
+  std::unique_ptr<PlatformWindow> _main_window;
+  core::Vector<std::unique_ptr<PlatformWindow>> _windows;
 
-        std::unique_ptr<ImGuiRenderer> _renderer;
+  std::unique_ptr<ImGuiRenderer> _renderer;
 
-        core::Chrono _frame_timer;
+  core::Chrono _frame_timer;
 
-        bool _demo_window = is_debug_defined;
+  bool _demo_window = is_debug_defined;
 
-        ImGuiTestEngine* _test_engine = nullptr;
-        bool _running_tests = false;
+  ImGuiTestEngine *_test_engine = nullptr;
+  bool _running_tests = false;
 };
 
 }

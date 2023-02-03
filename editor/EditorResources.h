@@ -29,64 +29,65 @@ SOFTWARE.
 namespace editor {
 
 class EditorResources final : NonMovable {
-    public:
-        enum SpirV {
-            DepthAlphaComp,
-            PickingComp,
+public:
+  enum SpirV {
+    DepthAlphaComp,
+    PickingComp,
 
-            ImGuiFrag,
-            ImGuiBillBoardFrag,
-            IdFrag,
-            ClearIdFrag,
-            EngineViewFrag,
-            SelectionFrag,
+    ImGuiFrag,
+    ImGuiBillBoardFrag,
+    IdFrag,
+    ClearIdFrag,
+    EngineViewFrag,
+    VoxelViewFrag,
+    SelectionFrag,
 
-            ScreenVert,
-            ImGuiVert,
-            ImGuiBillBoardVert,
-            IdVert,
+    ScreenVert,
+    ImGuiVert,
+    ImGuiBillBoardVert,
+    IdVert,
 
-            ImGuiBillBoardGeom,
+    ImGuiBillBoardGeom,
 
-            MaxSpirV
-        };
+    MaxSpirV
+  };
 
-        enum ComputePrograms {
-            DepthAlphaProgram,
-            PickingProgram,
+  enum ComputePrograms {
+    DepthAlphaProgram,
+    PickingProgram,
 
-            MaxComputePrograms
-        };
+    MaxComputePrograms
+  };
 
-        enum MaterialTemplates {
-            ImGuiMaterialTemplate,
-            ImGuiBillBoardMaterialTemplate,
+  enum MaterialTemplates {
+    ImGuiMaterialTemplate,
+    ImGuiBillBoardMaterialTemplate,
 
-            IdMaterialTemplate,
+    IdMaterialTemplate,
 
-            EngineViewMaterialTemplate,
-            SelectionMaterialTemplate,
+    EngineViewMaterialTemplate,
+    VoxelViewMaterialTemplate,
+    SelectionMaterialTemplate,
 
-            MaxMaterialTemplates
-        };
+    MaxMaterialTemplates
+  };
 
+  EditorResources();
 
-        EditorResources();
+  // can't default for inclusion reasons
+  ~EditorResources();
 
-        // can't default for inclusion reasons
-        ~EditorResources();
+  const ComputeProgram &operator[](ComputePrograms i) const;
+  const MaterialTemplate *operator[](MaterialTemplates i) const;
 
-        const ComputeProgram& operator[](ComputePrograms i) const;
-        const MaterialTemplate* operator[](MaterialTemplates i) const;
+  void reload();
 
-        void reload();
+private:
+  void load_resources();
 
-    private:
-        void load_resources();
-
-        std::unique_ptr<SpirVData[]> _spirv;
-        std::unique_ptr<ComputeProgram[]> _computes;
-        std::unique_ptr<MaterialTemplate[]> _material_templates;
+  std::unique_ptr<SpirVData[]> _spirv;
+  std::unique_ptr<ComputeProgram[]> _computes;
+  std::unique_ptr<MaterialTemplate[]> _material_templates;
 
 };
 

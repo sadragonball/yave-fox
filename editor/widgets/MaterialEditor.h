@@ -30,20 +30,20 @@ namespace editor {
 
 class MaterialEditor final : public Widget {
 
-    editor_widget_open(MaterialEditor, "View")
+  //editor_widget_open(MaterialEditor, "View")
 
-    public:
-        MaterialEditor();
+public:
+  MaterialEditor();
 
-        void set_material(const AssetPtr<Material>& mat);
+  void set_material(const AssetPtr<Material> &mat);
 
-    protected:
-        void on_gui() override;
+protected:
+  void on_gui() override;
 
-    private:
-        AssetPtr<Material> _material;
+private:
+  AssetPtr<Material> _material;
 
-        Preview _preview;
+  Preview _preview;
 
 };
 

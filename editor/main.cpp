@@ -58,7 +58,7 @@ static void parse_args(int argc, char **argv) {
       log_msg(fmt("% is not supported unless Y_DEBUG is defined%", arg), Log::Error);
 #endif
     } else {
-      log_msg(fmt("Unknown argumeent: %", arg), Log::Error);
+      log_msg(fmt("Unknown argument: %", arg), Log::Error);
     }
   }
 

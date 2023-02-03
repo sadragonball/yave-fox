@@ -30,17 +30,17 @@ namespace editor {
 
 class ComponentPanel final : public Widget {
 
-    editor_widget_open(ComponentPanel)
+  //editor_widget_open(ComponentPanel)
 
-    public:
-        ComponentPanel();
+public:
+  ComponentPanel();
 
-    protected:
-        void on_gui() override;
+protected:
+  void on_gui() override;
 
-    private:
-        core::Vector<std::unique_ptr<ComponentPanelWidgetBase>> _widgets;
-        bool _editing = false;
+private:
+  core::Vector<std::unique_ptr<ComponentPanelWidgetBase>> _widgets;
+  bool _editing = false;
 };
 
 }

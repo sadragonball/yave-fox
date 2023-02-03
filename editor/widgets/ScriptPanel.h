@@ -32,19 +32,19 @@ namespace editor {
 
 class ScriptPanel final : public Widget {
 
-    editor_widget_open(ScriptPanel)
+  //editor_widget_open(ScriptPanel)
 
-    public:
-        ScriptPanel();
+public:
+  ScriptPanel();
 
-    protected:
-        void on_gui() override;
+protected:
+  void on_gui() override;
 
-    private:
-        core::FixedArray<char> _buffer;
+private:
+  core::FixedArray<char> _buffer;
 
-        core::String _error;
-        std::shared_ptr<ScriptWorldComponent::RunOnceResult> _result;
+  core::String _error;
+  std::shared_ptr<ScriptWorldComponent::RunOnceResult> _result;
 };
 
 }

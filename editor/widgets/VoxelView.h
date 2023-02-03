@@ -13,8 +13,12 @@
 namespace editor {
 class VoxelView final : public Widget {
   editor_widget_open(VoxelView, "View")
-
 public:
+  enum class RenderView : u32 {
+    ISOSurface,
+    MaxRenderViews
+  };
+
   VoxelView();
   ~VoxelView();
 
@@ -38,6 +42,8 @@ private:
   bool is_focussed() const;
 
   void make_drop_target();
+
+  RenderView _view = RenderView::AlphaBlending;
 
   std::shared_ptr<FrameGraphResourcePool> _resource_pool;
 

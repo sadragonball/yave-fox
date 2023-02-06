@@ -34,7 +34,7 @@ namespace editor {
 
 class EngineView final : public Widget {
 
-  //editor_widget_open(EngineView, "View")
+//  editor_widget_open(EngineView, "View")
 
 public:
   enum class RenderView : u32 {

@@ -33,7 +33,11 @@ static bool is_clicked() {
 }
 
 VoxelView::VoxelView() :
-    Widget(ICON_FA_DESKTOP "Voxel View", ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoCollapse),
+    Slate(ICON_FA_DESKTOP "Voxel View",
+          ImGuiWindowFlags_AlwaysAutoResize |
+              ImGuiWindowFlags_NoTitleBar |
+              ImGuiWindowFlags_NoMove
+    ),
     _resource_pool(std::make_shared<FrameGraphResourcePool>()),
     _scene_view(&current_world()),
     _camera_controller(std::make_unique<HoudiniCameraController>()),
@@ -68,6 +72,29 @@ bool VoxelView::before_gui() {
 void VoxelView::after_gui() {
   ImGui::PopStyleColor(2);
   ImGui::PopStyleVar();
+}
+
+void VoxelView::draw_imgui_frame() {
+  if (!get_visible() || !before_gui()) {
+    return;
+  }
+  double view_start_pos_x = ImGui::GetWindowPos().x + (ImGui::GetIO().DisplaySize.x * 0.2);
+  double view_start_pos_y = ImGui::GetWindowPos().y;
+  ImGui::SetNextWindowPos(ImVec2(float(view_start_pos_x), float(view_start_pos_y)));
+  ImGui::SetNextWindowSize
+      (ImVec2(800, 600), ImGuiCond_Always);
+
+  bool opened = false;
+
+  //NULL FOR NO CLOSE
+  opened = ImGui::Begin(get_title().data(), NULL, get_flags());
+
+  if (opened) {
+    on_gui();
+  }
+
+  ImGui::End();
+  after_gui();
 }
 
 void VoxelView::draw(CmdBufferRecorder &recorder) {
@@ -152,6 +179,9 @@ void VoxelView::draw_settings_menu() {
 }
 
 void VoxelView::draw_menu_bar() {
+  if (!(get_flags() & ImGuiWindowFlags_MenuBar)) {
+    return;
+  }
   if (ImGui::BeginMenuBar()) {
     if (ImGui::BeginMenu("Render")) {
       ImGui::MenuItem("Editor entities", nullptr, &_settings.show_editor_entities);

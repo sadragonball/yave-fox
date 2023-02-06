@@ -23,6 +23,7 @@ SOFTWARE.
 #define EDITOR_UIMANAGER_H
 
 #include "Widget.h"
+#include "Slate.h"
 
 #include <y/core/Vector.h>
 #include <y/core/HashMap.h>
@@ -38,62 +39,65 @@ namespace editor {
 
 class UiManager : NonMovable {
 
-    struct WidgetIdStack {
-        core::Vector<u64> released;
-        u64 next = 0;
-    };
+  struct WidgetIdStack {
+    core::Vector<u64> released;
+    u64 next = 0;
+  };
 
-    public:
-        UiManager();
-        ~UiManager();
+public:
+  UiManager();
+  ~UiManager();
 
-        void on_gui();
+  void setup_ui();
 
-        Widget* add_widget(std::unique_ptr<Widget> widget, bool auto_parent = true);
+  void on_gui();
 
-        void close_all();
+  Widget *add_widget(std::unique_ptr<Widget> widget, bool auto_parent = true);
+  Slate *add_slate(std::unique_ptr<Slate> slate);
 
-    private:
-        void update_fps_counter();
-        void draw_fps_counter();
-        void update_shortcuts();
-        void draw_menu_bar();
-        void set_widget_id(Widget* widget);
+  void close_all();
 
-        core::Vector<std::unique_ptr<Widget>> _widgets;
-        core::FlatHashMap<std::type_index, WidgetIdStack> _ids;
+private:
+  void update_fps_counter();
+  void draw_fps_counter();
+  void update_shortcuts();
+  void draw_menu_bar();
+  void set_widget_id(Widget *widget);
+  void set_slate_id(Slate *slate);
 
-        Widget* _auto_parent = nullptr;
+  core::Vector<std::unique_ptr<Widget>> _widgets;
+  core::Vector<std::unique_ptr<Slate>> _slates;
+  
+  core::FlatHashMap<std::type_index, WidgetIdStack> _ids;
 
-        core::Vector<const EditorAction*> _actions;
-        core::Vector<std::pair<const EditorAction*, bool>> _shortcuts;
+  Widget *_auto_parent = nullptr;
 
-        core::FixedArray<char> _search_pattern = core::FixedArray<char>(256);
+  core::Vector<const EditorAction *> _actions;
+  core::Vector<std::pair<const EditorAction *, bool>> _shortcuts;
 
-        core::Chrono _timer;
-        core::FixedArray<float> _frame_times = core::FixedArray<float>(60);
-        float _total_time = 0.0f;
-        u64 _frame_number = 0;
+  core::FixedArray<char> _search_pattern = core::FixedArray<char>(256);
+
+  core::Chrono _timer;
+  core::FixedArray<float> _frame_times = core::FixedArray<float>(60);
+  float _total_time = 0.0f;
+  u64 _frame_number = 0;
 };
-
-
 
 class FunctionWidget final : public Widget {
-    public:
-        FunctionWidget(std::string_view name, std::function<void()> gui) : Widget(name), _on_gui(std::move(gui)) {
-        }
+public:
+  FunctionWidget(std::string_view name, std::function<void()> gui) : Widget(name), _on_gui(std::move(gui)) {
+  }
 
-    protected:
-        void on_gui() override {
-            if(_on_gui) {
-                _on_gui();
-            }
-        }
+protected:
+  void on_gui() override {
+    if (_on_gui) {
+      _on_gui();
+    }
+  }
 
-    private:
-        std::function<void()> _on_gui;
+private:
+  std::function<void()> _on_gui;
 };
-
 
 }
 

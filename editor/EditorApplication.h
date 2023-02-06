@@ -33,110 +33,107 @@ SOFTWARE.
 namespace editor {
 
 class EditorApplication : NonMovable {
-    public:
-        EditorApplication(ImGuiPlatform* platform);
-        ~EditorApplication();
+public:
+  EditorApplication(ImGuiPlatform *platform);
+  ~EditorApplication();
 
-        static EditorApplication* instance();
+  static EditorApplication *instance();
 
-        void exec();
+  void exec();
 
-        void flush_reload();
+  void flush_reload();
 
-        void set_scene_view(SceneView* scene);
-        void unset_scene_view(SceneView* scene);
+  void set_scene_view(SceneView *scene);
+  void unset_scene_view(SceneView *scene);
+  
+  void save_world();
+  void load_world();
+  void new_world();
 
+  SceneView &scene_view() {
+    return *_scene_view;
+  }
 
-        void save_world();
-        void load_world();
-        void new_world();
+  AssetStore &asset_store() {
+    return *_asset_store;
+  }
 
+  AssetLoader &asset_loader() {
+    return *_loader;
+  }
 
-        SceneView& scene_view() {
-            return *_scene_view;
-        }
+  UndoStack &undo_stack() {
+    return *_undo_stack;
+  }
 
-        AssetStore& asset_store() {
-            return *_asset_store;
-        }
+  ThumbmailRenderer &thumbmail_renderer() {
+    return *_thumbmail_renderer;
+  }
 
-        AssetLoader& asset_loader() {
-            return *_loader;
-        }
+  EditorWorld &world() {
+    return *_world;
+  }
 
-        UndoStack& undo_stack() {
-            return *_undo_stack;
-        }
+  DirectDraw &debug_drawer() {
+    return *_debug_drawer;
+  }
 
-        ThumbmailRenderer& thumbmail_renderer() {
-            return *_thumbmail_renderer;
-        }
+  PendingOpsQueue &pending_ops_queue() {
+    return *_pending_ops_queue;
+  }
 
-        EditorWorld& world() {
-            return *_world;
-        }
+  const EditorResources &resources() const {
+    return *_resources;
+  }
 
-        DirectDraw& debug_drawer() {
-            return *_debug_drawer;
-        }
+  UiManager &ui() {
+    return *_ui;
+  }
 
-        PendingOpsQueue& pending_ops_queue() {
-            return *_pending_ops_queue;
-        }
+  CmdBufferRecorder &recorder() {
+    y_debug_assert(_recorder);
+    return *_recorder;
+  }
 
-        const EditorResources& resources() const {
-            return *_resources;
-        }
+private:
+  static EditorApplication *_instance;
 
-        UiManager& ui() {
-            return *_ui;
-        }
+  void process_deferred_actions();
+  void save_world_deferred() const;
+  void load_world_deferred();
 
-        CmdBufferRecorder& recorder() {
-            y_debug_assert(_recorder);
-            return *_recorder;
-        }
+  ImGuiPlatform *_platform = nullptr;
 
-    private:
-        static EditorApplication* _instance;
+  std::unique_ptr<EditorResources> _resources;
 
-        void process_deferred_actions();
-        void save_world_deferred() const;
-        void load_world_deferred();
+  std::shared_ptr<AssetStore> _asset_store;
+  std::unique_ptr<AssetLoader> _loader;
+  std::unique_ptr<ThumbmailRenderer> _thumbmail_renderer;
 
+  std::unique_ptr<EditorWorld> _world;
+  std::unique_ptr<DirectDraw> _debug_drawer;
 
-        ImGuiPlatform* _platform = nullptr;
+  std::unique_ptr<UiManager> _ui;
 
-        std::unique_ptr<EditorResources> _resources;
+  std::unique_ptr<UndoStack> _undo_stack;
 
-        std::shared_ptr<AssetStore> _asset_store;
-        std::unique_ptr<AssetLoader> _loader;
-        std::unique_ptr<ThumbmailRenderer> _thumbmail_renderer;
+  std::unique_ptr<PendingOpsQueue> _pending_ops_queue;
 
-        std::unique_ptr<EditorWorld> _world;
-        std::unique_ptr<DirectDraw> _debug_drawer;
+  CmdBufferRecorder *_recorder = nullptr;
 
-        std::unique_ptr<UiManager> _ui;
+  SceneView _default_scene_view;
+  SceneView *_scene_view = nullptr;
 
-        std::unique_ptr<UndoStack> _undo_stack;
+  enum DeferredActions : u32 {
+    None = 0x00,
+    Save = 0x01,
+    Load = 0x02,
+    New = 0x04,
+  };
 
-        std::unique_ptr<PendingOpsQueue> _pending_ops_queue;
+  u32 _deferred_actions = None;
 
-        CmdBufferRecorder* _recorder = nullptr;
-
-        SceneView _default_scene_view;
-        SceneView* _scene_view = nullptr;
-
-        enum DeferredActions : u32 {
-            None    = 0x00,
-            Save    = 0x01,
-            Load    = 0x02,
-            New     = 0x04,
-        };
-
-        u32 _deferred_actions = None;
-
-        core::Chrono _update_timer;
+  core::Chrono _update_timer;
 };
 
 }

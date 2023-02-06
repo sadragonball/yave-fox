@@ -214,8 +214,8 @@ static void setup_backend_flags(ImGuiIO &io, bool multi_viewport) {
   io.BackendPlatformName = "Yave ImGuiPlatform";
   io.BackendRendererName = "Yave";
 
-  // Disable docking
-  io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+  // Disable Docking
+//  io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
   io.ConfigDockingWithShift = false;
 
   io.BackendFlags |= ImGuiBackendFlags_PlatformHasViewports | ImGuiBackendFlags_RendererHasViewports;
@@ -297,7 +297,7 @@ private:
 
 ImGuiPlatform::PlatformWindow::PlatformWindow(ImGuiPlatform *parent, Window::Flags flags) :
     platform(parent),
-    window({1280, 768}, "Yave Editor", flags),
+    window({1280, 720}, "Yave Editor", flags),
     swapchain(&window),
     event_handler(std::make_unique<ImGuiEventHandler>(&window)) {
 
@@ -444,9 +444,10 @@ void ImGuiPlatform::exec(OnGuiFunc func) {
         y_profile_zone("imgui");
         ImGui::NewFrame();
 
-        setup_imgui_dockspace();
+//        setup_imgui_dockspace();
 
         if (_demo_window) {
+
           ImGui::ShowDemoWindow(&_demo_window);
         }
 

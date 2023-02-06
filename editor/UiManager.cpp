@@ -26,10 +26,10 @@ SOFTWARE.
 #include <editor/utils/ui.h>
 #include <editor/widgets/PerformanceMetrics.h>
 
+#include "editor/widgets/VoxelView.h"
+
 #include <yave/assets/AssetLoader.h>
 #include <y/core/HashMap.h>
-
-
 
 #include <regex>
 #include <tuple>
@@ -37,238 +37,263 @@ SOFTWARE.
 namespace editor {
 
 static core::String shortcut_text(KeyCombination shortcut) {
-    core::String text;
-    if(!shortcut.is_empty()) {
-        for(const Key k : all_keys()) {
-            if(shortcut.contains(k)) {
-                if(!text.is_empty()) {
-                    text.push_back('+');
-                }
-                text += key_name(k);
-            }
+  core::String text;
+  if (!shortcut.is_empty()) {
+    for (const Key k : all_keys()) {
+      if (shortcut.contains(k)) {
+        if (!text.is_empty()) {
+          text.push_back('+');
         }
+        text += key_name(k);
+      }
     }
-    return text;
+  }
+  return text;
 }
 
-
-
-
 UiManager::UiManager() {
-    for(const EditorAction* action = all_actions(); action; action = action->next) {
-        _actions << action;
-        if(!action->shortcut.is_empty()) {
-            _shortcuts << std::make_pair(action, false);
-        }
-    }
 
-    std::sort(_actions.begin(), _actions.end(), [](const EditorAction* a, const EditorAction* b) {
-        return std::lexicographical_compare(b->menu.begin(), b->menu.end(), a->menu.begin(), a->menu.end());
-    });
+//  for (const EditorAction *action = all_actions(); action; action = action->next) {
+//    _actions << action;
+//    if (!action->shortcut.is_empty()) {
+//      _shortcuts << std::make_pair(action, false);
+//    }
+//  }
+//
+//  std::sort(_actions.begin(), _actions.end(), [](const EditorAction *a, const EditorAction *b) {
+//    return std::lexicographical_compare(b->menu.begin(), b->menu.end(), a->menu.begin(), a->menu.end());
+//  });
 }
 
 UiManager::~UiManager() {
 }
 
 void UiManager::on_gui() {
-    y_profile();
+  y_profile();
 
-    update_fps_counter();
-    update_shortcuts();
-    draw_menu_bar();
+  update_fps_counter();
+  update_shortcuts();
+  draw_menu_bar();
 
-    core::FlatHashMap<Widget*, int> to_destroy;
+  for (auto &slate : _slates) {
+    y_profile_dyn_zone(slate->_title_with_id.data());
 
-    for(auto& widget : _widgets) {
-        y_profile_dyn_zone(widget->_title_with_id.data());
+    slate->draw_imgui_frame();
 
-        _auto_parent = widget.get();
-        widget->draw(false);
+  }
 
-        if(!widget->is_visible() && !widget->should_keep_alive()) {
-            to_destroy[widget.get()];
-        }
-    }
+//  core::FlatHashMap<Widget *, int> to_destroy;
 
-    _auto_parent = nullptr;
-
-   if(!to_destroy.is_empty()) {
-        for(usize i = 0;  i != _widgets.size(); ++i) {
-            Widget* wid = _widgets[i].get();
-            bool destroy = to_destroy.contains(wid);
-            for(Widget* parent = wid->_parent; parent && !destroy; parent = parent->_parent) {
-                destroy |= to_destroy.contains(parent);
-            }
-
-            if(destroy) {
-                _ids[typeid(*wid)].released << wid->_id;
-                _widgets.erase_unordered(_widgets.begin() + i);
-                --i;
-            }
-        }
-    }
+//  for (auto &widget : _widgets) {
+//    y_profile_dyn_zone(widget->_title_with_id.data());
+//
+//    _auto_parent = widget.get();
+//    widget->draw(false);
+//
+//    if (!widget->is_visible() && !widget->should_keep_alive()) {
+//      to_destroy[widget.get()];
+//    }
+//  }
+//
+//  _auto_parent = nullptr;
+//
+//  if (!to_destroy.is_empty()) {
+//    for (usize i = 0; i != _widgets.size(); ++i) {
+//      Widget *wid = _widgets[i].get();
+//      bool destroy = to_destroy.contains(wid);
+//      for (Widget *parent = wid->_parent; parent && !destroy; parent = parent->_parent) {
+//        destroy |= to_destroy.contains(parent);
+//      }
+//
+//      if (destroy) {
+//        _ids[typeid(*wid)].released << wid->_id;
+//        _widgets.erase_unordered(_widgets.begin() + i);
+//        --i;
+//      }
+//    }
+//  }
 }
 
 void UiManager::update_fps_counter() {
-    float& current_frame = _frame_times[_frame_number++ % _frame_times.size()];
-    _total_time -= current_frame;
-    current_frame = float(_timer.reset().to_millis());
-    _total_time += current_frame;
+  float &current_frame = _frame_times[_frame_number++ % _frame_times.size()];
+  _total_time -= current_frame;
+  current_frame = float(_timer.reset().to_millis());
+  _total_time += current_frame;
 }
 
 void UiManager::draw_fps_counter() {
-    const float avg_time = _total_time / std::min(u64(_frame_times.size()), _frame_number);
-    char buffer[64] = {};
-    std::snprintf(buffer, sizeof(buffer), "FPS: %.01f (%.01f ms)", 1000.0f / avg_time, avg_time);
-    if(ImGui::MenuItem(buffer)) {
-        add_widget(std::make_unique<PerformanceMetrics>());
-    }
+  const float avg_time = _total_time / std::min(u64(_frame_times.size()), _frame_number);
+  char buffer[64] = {};
+  std::snprintf(buffer, sizeof(buffer), "FPS: %.01f (%.01f ms)", 1000.0f / avg_time, avg_time);
+  if (ImGui::MenuItem(buffer)) {
+    add_widget(std::make_unique<PerformanceMetrics>());
+  }
 }
 
 void UiManager::update_shortcuts() {
-    y_profile();
+  y_profile();
 
-    const auto& io = ImGui::GetIO();
-    if(io.WantCaptureKeyboard) {
-        return;
-    }
+  const auto &io = ImGui::GetIO();
+  if (io.WantCaptureKeyboard) {
+    return;
+  }
 
-    KeyCombination keys;
-    for(const Key k : all_keys()) {
-        if(ImGui::IsKeyDown(to_imgui_key(k))) {
-            keys += k;
-        }
+  KeyCombination keys;
+  for (const Key k : all_keys()) {
+    if (ImGui::IsKeyDown(to_imgui_key(k))) {
+      keys += k;
     }
+  }
 
-    for(auto&& action : _shortcuts) {
-        if(keys.contains(action.first->shortcut)) {
-            if(!action.second) {
-                action.first->function();
-                action.second = true;
-            }
-        } else {
-            action.second = false;
-        }
+  for (auto &&action : _shortcuts) {
+    if (keys.contains(action.first->shortcut)) {
+      if (!action.second) {
+        action.first->function();
+        action.second = true;
+      }
+    } else {
+      action.second = false;
     }
+  }
 }
 
 void UiManager::draw_menu_bar() {
-    ImGui::PushID("##mainmenubar");
-    if(ImGui::BeginMainMenuBar()) {
-        if(ImGui::BeginMenu("File")) {
-            ImGui::EndMenu();
-        }
-        if(ImGui::BeginMenu("Edit")) {
-            ImGui::EndMenu();
-        }
-        if(ImGui::BeginMenu("View")) {
-            ImGui::EndMenu();
-        }
-
-        if(asset_loader().is_loading()) {
-            ImGui::Separator();
-            ImGui::TextUnformatted(ICON_FA_DATABASE);
-            if(ImGui::IsItemHovered()) {
-                ImGui::BeginTooltip();
-                ImGui::Text("Assets are loading%s", imgui::ellipsis());
-                ImGui::EndTooltip();
-            }
-        }
-
-        if(app_settings().ui.draw_fps_counter) {
-            ImGui::Separator();
-            draw_fps_counter();
-        }
-
-        for(const EditorAction* action : _actions) {
-            if(!action->menu.size()) {
-                continue;
-            }
-
-            usize stack_size = 0;
-            for(std::string_view menu : action->menu) {
-                if(!ImGui::BeginMenu(menu.data())) {
-                    break;
-                }
-                ++stack_size;
-            }
-
-            if(stack_size == action->menu.size()) {
-                const core::String shortcut = shortcut_text(action->shortcut);
-                if(ImGui::MenuItem(action->name.data(), shortcut.is_empty() ? nullptr : shortcut.data())) {
-                    action->function();
-                }
-            }
-
-            for(usize i = 0; i != stack_size; ++i) {
-                ImGui::EndMenu();
-            }
-        }
-
-        {
-            const float search_bar_size = 200.0;
-            const float margin = ImGui::CalcTextSize(ICON_FA_SEARCH " ").x;
-            const float offset = ImGui::GetContentRegionMax().x - (search_bar_size + margin);
-
-            if(offset > 0.0f) {
-                ImGui::Indent(offset);
-                ImGui::SetNextItemWidth(-margin);
-
-                imgui::search_bar(ICON_FA_SEARCH "##searchbar", _search_pattern.data(), _search_pattern.size());
-
-                if(imgui::begin_suggestion_popup()) {
-                    const std::regex regex(_search_pattern.data(), std::regex::icase);
-                    for(const EditorAction* action : _actions) {
-                        if(std::regex_search(action->name.data(), regex)) {
-                            const core::String shortcut = shortcut_text(action->shortcut);
-                            if(imgui::suggestion_item(action->name.data(), shortcut.is_empty() ? nullptr : shortcut.data())) {
-                                action->function();
-                                _search_pattern[0] = 0;
-                            }
-                            if(!action->description.empty() && ImGui::IsItemHovered()) {
-                                ImGui::BeginTooltip();
-                                ImGui::TextUnformatted(action->description.data());
-                                ImGui::EndTooltip();
-                            }
-                        }
-                    }
-
-
-                    imgui::end_suggestion_popup();
-                }
-            }
-        }
-
-        ImGui::EndMainMenuBar();
+  ImGui::PushID("##mainmenubar");
+  if (ImGui::BeginMainMenuBar()) {
+    if (ImGui::BeginMenu("File")) {
+      ImGui::EndMenu();
     }
-    ImGui::PopID();
+    if (ImGui::BeginMenu("Edit")) {
+      ImGui::EndMenu();
+    }
+    if (ImGui::BeginMenu("View")) {
+      ImGui::EndMenu();
+    }
+
+    if (asset_loader().is_loading()) {
+      ImGui::Separator();
+      ImGui::TextUnformatted(ICON_FA_DATABASE);
+      if (ImGui::IsItemHovered()) {
+        ImGui::BeginTooltip();
+        ImGui::Text("Assets are loading%s", imgui::ellipsis());
+        ImGui::EndTooltip();
+      }
+    }
+
+    if (app_settings().ui.draw_fps_counter) {
+      ImGui::Separator();
+      draw_fps_counter();
+    }
+
+    for (const EditorAction *action : _actions) {
+      if (!action->menu.size()) {
+        continue;
+      }
+
+      usize stack_size = 0;
+      for (std::string_view menu : action->menu) {
+        if (!ImGui::BeginMenu(menu.data())) {
+          break;
+        }
+        ++stack_size;
+      }
+
+      if (stack_size == action->menu.size()) {
+        const core::String shortcut = shortcut_text(action->shortcut);
+        if (ImGui::MenuItem(action->name.data(), shortcut.is_empty() ? nullptr : shortcut.data())) {
+          action->function();
+        }
+      }
+
+      for (usize i = 0; i != stack_size; ++i) {
+        ImGui::EndMenu();
+      }
+    }
+
+    {
+      const float search_bar_size = 200.0;
+      const float margin = ImGui::CalcTextSize(ICON_FA_SEARCH " ").x;
+      const float offset = ImGui::GetContentRegionMax().x - (search_bar_size + margin);
+
+      if (offset > 0.0f) {
+        ImGui::Indent(offset);
+        ImGui::SetNextItemWidth(-margin);
+
+        imgui::search_bar(ICON_FA_SEARCH "##searchbar", _search_pattern.data(), _search_pattern.size());
+
+        if (imgui::begin_suggestion_popup()) {
+          const std::regex regex(_search_pattern.data(), std::regex::icase);
+          for (const EditorAction *action : _actions) {
+            if (std::regex_search(action->name.data(), regex)) {
+              const core::String shortcut = shortcut_text(action->shortcut);
+              if (imgui::suggestion_item(action->name.data(), shortcut.is_empty() ? nullptr : shortcut.data())) {
+                action->function();
+                _search_pattern[0] = 0;
+              }
+              if (!action->description.empty() && ImGui::IsItemHovered()) {
+                ImGui::BeginTooltip();
+                ImGui::TextUnformatted(action->description.data());
+                ImGui::EndTooltip();
+              }
+            }
+          }
+
+          imgui::end_suggestion_popup();
+        }
+      }
+    }
+
+    ImGui::EndMainMenuBar();
+  }
+  ImGui::PopID();
 }
 
-Widget* UiManager::add_widget(std::unique_ptr<Widget> widget, bool auto_parent) {
-    Widget* wid = widget.get();
+Widget *UiManager::add_widget(std::unique_ptr<Widget> widget, bool auto_parent) {
+  Widget *wid = widget.get();
 
-    if(auto_parent && _auto_parent) {
-        wid->set_parent(_auto_parent);
-    }
+  if (auto_parent && _auto_parent) {
+    wid->set_parent(_auto_parent);
+  }
 
-    set_widget_id(wid);
-    _widgets << std::move(widget);
+  set_widget_id(wid);
+  _widgets << std::move(widget);
 
-    return wid;
+  return wid;
 }
 
 void UiManager::close_all() {
-    _widgets.clear();
-    _ids.clear();
+  _widgets.clear();
+  _ids.clear();
 }
 
-void UiManager::set_widget_id(Widget* widget) {
-    WidgetIdStack& ids = _ids[typeid(*widget)];
-    if(!ids.released.is_empty()) {
-        widget->set_id(ids.released.pop());
-    } else {
-        widget->set_id(++ids.next);
-    }
+void UiManager::set_widget_id(Widget *widget) {
+  WidgetIdStack &ids = _ids[typeid(*widget)];
+  if (!ids.released.is_empty()) {
+    widget->set_id(ids.released.pop());
+  } else {
+    widget->set_id(++ids.next);
+  }
+}
+
+void UiManager::setup_ui() {
+  editor::UiManager::add_slate(std::make_unique<VoxelView>());
+}
+
+Slate *UiManager::add_slate(std::unique_ptr<Slate> slate) {
+  Slate *s = slate.get();
+
+  set_slate_id(s);
+  _slates << std::move(slate);
+
+  return s;
+}
+void UiManager::set_slate_id(Slate *slate) {
+  WidgetIdStack &ids = _ids[typeid(*slate)];
+  if (!ids.released.is_empty()) {
+    slate->set_id(ids.released.pop());
+  } else {
+    slate->set_id(++ids.next);
+  }
 }
 
 }

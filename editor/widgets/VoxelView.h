@@ -7,14 +7,16 @@
 #include "Gizmo.h"
 #include "OrientationGizmo.h"
 
-#include "editor/Widget.h"
+#include "editor/Slate.h"
 #include "editor/renderer/EditorRenderer.h"
 
 namespace editor {
-class VoxelView final : public Widget {
-  editor_widget_open(VoxelView, "View")
+class VoxelView final : public Slate {
+//  editor_widget_open(VoxelView, "View")
+  typedef Slate Super;
 public:
   enum class RenderView : u32 {
+    AlphaBlending,
     ISOSurface,
     MaxRenderViews
   };
@@ -27,6 +29,8 @@ protected:
 
   bool before_gui() override;
   void after_gui() override;
+
+  void draw_imgui_frame() override;
 
 private:
   void draw(CmdBufferRecorder &recorder);

@@ -29,40 +29,38 @@ SOFTWARE.
 namespace editor {
 
 enum class EditorPassFlags : u32 {
-    None                = 0x00,
-    SelectionOnly       = 0x01
+  None = 0x00,
+  SelectionOnly = 0x01
 };
 
 constexpr EditorPassFlags operator|(EditorPassFlags a, EditorPassFlags b) {
-    return EditorPassFlags(u32(a) | u32(b));
+  return EditorPassFlags(u32(a) | u32(b));
 }
 
 constexpr EditorPassFlags operator&(EditorPassFlags a, EditorPassFlags b) {
-    return EditorPassFlags(u32(a) & u32(b));
+  return EditorPassFlags(u32(a) & u32(b));
 }
 
 struct EditorRendererSettings {
-    RendererSettings renderer_settings;
+  RendererSettings renderer_settings;
 
-    bool show_editor_entities = true;
-    bool show_selection = true;
-    float billboard_size = 64.0f;
+  bool show_editor_entities = true;
+  bool show_selection = true;
+  float billboard_size = 64.0f;
 };
-
 
 struct EditorRenderer {
-    DefaultRenderer renderer;
+  DefaultRenderer renderer;
 
-    FrameGraphImageId final;
-    FrameGraphImageId depth;
+  FrameGraphImageId final;
+  FrameGraphImageId depth;
 
-    static EditorRenderer create(FrameGraph& framegraph,
-                                 const SceneView& view,
-                                 const math::Vec2ui& size,
-                                 const EditorRendererSettings& settings = EditorRendererSettings());
+  static EditorRenderer create(FrameGraph &frame_graph,
+                               const SceneView &view,
+                               const math::Vec2ui &size,
+                               const EditorRendererSettings &settings = EditorRendererSettings());
 };
 
-}
+}// namespace editor
 
-#endif // EDITOR_RENDERER_EDITORRENDERER_H
-
+#endif// EDITOR_RENDERER_EDITORRENDERER_H

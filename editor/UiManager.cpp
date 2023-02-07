@@ -28,8 +28,8 @@ SOFTWARE.
 
 #include "editor/widgets/VoxelView.h"
 
-#include <yave/assets/AssetLoader.h>
 #include <y/core/HashMap.h>
+#include <yave/assets/AssetLoader.h>
 
 #include <regex>
 #include <tuple>
@@ -53,16 +53,16 @@ static core::String shortcut_text(KeyCombination shortcut) {
 
 UiManager::UiManager() {
 
-//  for (const EditorAction *action = all_actions(); action; action = action->next) {
-//    _actions << action;
-//    if (!action->shortcut.is_empty()) {
-//      _shortcuts << std::make_pair(action, false);
-//    }
-//  }
-//
-//  std::sort(_actions.begin(), _actions.end(), [](const EditorAction *a, const EditorAction *b) {
-//    return std::lexicographical_compare(b->menu.begin(), b->menu.end(), a->menu.begin(), a->menu.end());
-//  });
+  //  for (const EditorAction *action = all_actions(); action; action = action->next) {
+  //    _actions << action;
+  //    if (!action->shortcut.is_empty()) {
+  //      _shortcuts << std::make_pair(action, false);
+  //    }
+  //  }
+  //
+  //  std::sort(_actions.begin(), _actions.end(), [](const EditorAction *a, const EditorAction *b) {
+  //    return std::lexicographical_compare(b->menu.begin(), b->menu.end(), a->menu.begin(), a->menu.end());
+  //  });
 }
 
 UiManager::~UiManager() {
@@ -79,39 +79,38 @@ void UiManager::on_gui() {
     y_profile_dyn_zone(slate->_title_with_id.data());
 
     slate->draw_imgui_frame();
-
   }
 
-//  core::FlatHashMap<Widget *, int> to_destroy;
+  //  core::FlatHashMap<Widget *, int> to_destroy;
 
-//  for (auto &widget : _widgets) {
-//    y_profile_dyn_zone(widget->_title_with_id.data());
-//
-//    _auto_parent = widget.get();
-//    widget->draw(false);
-//
-//    if (!widget->is_visible() && !widget->should_keep_alive()) {
-//      to_destroy[widget.get()];
-//    }
-//  }
-//
-//  _auto_parent = nullptr;
-//
-//  if (!to_destroy.is_empty()) {
-//    for (usize i = 0; i != _widgets.size(); ++i) {
-//      Widget *wid = _widgets[i].get();
-//      bool destroy = to_destroy.contains(wid);
-//      for (Widget *parent = wid->_parent; parent && !destroy; parent = parent->_parent) {
-//        destroy |= to_destroy.contains(parent);
-//      }
-//
-//      if (destroy) {
-//        _ids[typeid(*wid)].released << wid->_id;
-//        _widgets.erase_unordered(_widgets.begin() + i);
-//        --i;
-//      }
-//    }
-//  }
+  //  for (auto &widget : _widgets) {
+  //    y_profile_dyn_zone(widget->_title_with_id.data());
+  //
+  //    _auto_parent = widget.get();
+  //    widget->draw(false);
+  //
+  //    if (!widget->is_visible() && !widget->should_keep_alive()) {
+  //      to_destroy[widget.get()];
+  //    }
+  //  }
+  //
+  //  _auto_parent = nullptr;
+  //
+  //  if (!to_destroy.is_empty()) {
+  //    for (usize i = 0; i != _widgets.size(); ++i) {
+  //      Widget *wid = _widgets[i].get();
+  //      bool destroy = to_destroy.contains(wid);
+  //      for (Widget *parent = wid->_parent; parent && !destroy; parent = parent->_parent) {
+  //        destroy |= to_destroy.contains(parent);
+  //      }
+  //
+  //      if (destroy) {
+  //        _ids[typeid(*wid)].released << wid->_id;
+  //        _widgets.erase_unordered(_widgets.begin() + i);
+  //        --i;
+  //      }
+  //    }
+  //  }
 }
 
 void UiManager::update_fps_counter() {
@@ -210,39 +209,6 @@ void UiManager::draw_menu_bar() {
       }
     }
 
-    {
-      const float search_bar_size = 200.0;
-      const float margin = ImGui::CalcTextSize(ICON_FA_SEARCH " ").x;
-      const float offset = ImGui::GetContentRegionMax().x - (search_bar_size + margin);
-
-      if (offset > 0.0f) {
-        ImGui::Indent(offset);
-        ImGui::SetNextItemWidth(-margin);
-
-        imgui::search_bar(ICON_FA_SEARCH "##searchbar", _search_pattern.data(), _search_pattern.size());
-
-        if (imgui::begin_suggestion_popup()) {
-          const std::regex regex(_search_pattern.data(), std::regex::icase);
-          for (const EditorAction *action : _actions) {
-            if (std::regex_search(action->name.data(), regex)) {
-              const core::String shortcut = shortcut_text(action->shortcut);
-              if (imgui::suggestion_item(action->name.data(), shortcut.is_empty() ? nullptr : shortcut.data())) {
-                action->function();
-                _search_pattern[0] = 0;
-              }
-              if (!action->description.empty() && ImGui::IsItemHovered()) {
-                ImGui::BeginTooltip();
-                ImGui::TextUnformatted(action->description.data());
-                ImGui::EndTooltip();
-              }
-            }
-          }
-
-          imgui::end_suggestion_popup();
-        }
-      }
-    }
-
     ImGui::EndMainMenuBar();
   }
   ImGui::PopID();
@@ -296,5 +262,4 @@ void UiManager::set_slate_id(Slate *slate) {
   }
 }
 
-}
-
+}// namespace editor

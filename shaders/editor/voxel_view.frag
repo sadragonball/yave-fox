@@ -39,5 +39,5 @@ void main() {
         color = vec3(pow(depth, 0.35));
     }
 
-    out_color = vec4(color, 1.0);
+    out_color = vec4(0.3, 0.3, 0.3, 1.0);
 }

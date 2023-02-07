@@ -33,7 +33,7 @@ static bool is_clicked() {
 }
 
 VoxelView::VoxelView() :
-    Slate(ICON_FA_DESKTOP "Voxel View",
+    Slate(ICON_FA_DESKTOP " Voxel View",
           ImGuiWindowFlags_AlwaysAutoResize |
               ImGuiWindowFlags_NoTitleBar |
               ImGuiWindowFlags_NoMove
@@ -61,8 +61,8 @@ bool VoxelView::is_focussed() const {
 }
 
 bool VoxelView::before_gui() {
-  ImGui::PushStyleColor(ImGuiCol_MenuBarBg, math::Vec4(0.0f));
-  ImGui::PushStyleColor(ImGuiCol_Border, math::Vec4(0.0f));
+  ImGui::PushStyleColor(ImGuiCol_MenuBarBg, math::Vec4(0.f));
+  ImGui::PushStyleColor(ImGuiCol_Border, math::Vec4(1.f, 0.f, 0.f, 1.f));
 
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, math::Vec2());
 
@@ -78,11 +78,15 @@ void VoxelView::draw_imgui_frame() {
   if (!get_visible() || !before_gui()) {
     return;
   }
-  double view_start_pos_x = ImGui::GetWindowPos().x + (ImGui::GetIO().DisplaySize.x * 0.2);
-  double view_start_pos_y = ImGui::GetWindowPos().y;
-  ImGui::SetNextWindowPos(ImVec2(float(view_start_pos_x), float(view_start_pos_y)));
+  float view_start_pos_x = ImGui::GetMainViewport()->Pos.x + (ImGui::GetIO().DisplaySize.x * 0.19f);
+  float view_start_pos_y = ImGui::GetMainViewport()->Pos.y + 16.0f * 3;
+  float height = ImGui::GetIO().DisplaySize.y - 64.f;
+  float width = height * 1.2f;
+
+  ImGui::SetNextWindowPos(ImVec2(view_start_pos_x, view_start_pos_y));
   ImGui::SetNextWindowSize
-      (ImVec2(800, 600), ImGuiCond_Always);
+      (ImVec2(width, height),
+       ImGuiCond_Always);
 
   bool opened = false;
 

@@ -4,22 +4,26 @@
 
 #include "VoxelView.h"
 
-#include "editor/EditorWorld.h"
-#include "editor/Settings.h"
 #include "editor/EditorApplication.h"
 #include "editor/EditorResources.h"
+#include "editor/EditorWorld.h"
 #include "editor/Picker.h"
+#include "editor/Settings.h"
 
-#include "editor/utils/ui.h"
+#include "editor/components/EditorComponent.h"
+
 #include "editor/utils/CameraController.h"
+#include "editor/utils/ui.h"
 
-#include "yave/framegraph/FrameGraphFrameResources.h"
-#include "yave/framegraph/FrameGraphResourcePool.h"
-#include "yave/framegraph/FrameGraphPass.h"
 #include "yave/framegraph/FrameGraph.h"
+#include "yave/framegraph/FrameGraphFrameResources.h"
+#include "yave/framegraph/FrameGraphPass.h"
+#include "yave/framegraph/FrameGraphResourcePool.h"
 
 #include "yave/graphics/commands/CmdBufferRecorder.h"
 #include "yave/graphics/device/DeviceResources.h"
+
+#include "yave/components/StaticMeshComponent.h"
 
 #include <yave/utils/color.h>
 
@@ -32,18 +36,40 @@ static bool is_clicked() {
       || ImGui::IsMouseClicked(ImGuiMouseButton_Middle);
 }
 
-VoxelView::VoxelView() :
-    Slate(ICON_FA_DESKTOP " Voxel View",
-          ImGuiWindowFlags_AlwaysAutoResize |
-              ImGuiWindowFlags_NoTitleBar |
-              ImGuiWindowFlags_NoMove
-    ),
-    _resource_pool(std::make_shared<FrameGraphResourcePool>()),
-    _scene_view(&current_world()),
-    _camera_controller(std::make_unique<HoudiniCameraController>()),
-    _gizmo(&_scene_view),
-    _orientation_gizmo(&_scene_view) {
+static math::Vec3 new_entity_pos(float size) {
+  const Camera &camera = scene_view().camera();
+  return camera.position() + camera.forward() * size;
+}
 
+static void add_debug_cube() {
+  y_profile();
+
+  EditorWorld &world = current_world();
+
+  const auto mesh = device_resources()[DeviceResources::CubeMesh];
+  const auto material = device_resources()[DeviceResources::EmptyMaterial];
+
+  const ecs::EntityId parent = world.create_collection_entity("Debug Voxel Cube");
+  world.component_mut<EditorComponent>(parent);
+
+  const ecs::EntityId entity = world.create_entity<StaticMeshComponent>();
+
+  world.set_entity_name(entity, "Debug cube static mesh");
+  world.set_parent(entity, parent);
+  world.component_mut<TransformableComponent>(entity)->set_position(math::Vec3(0));
+  *world.component_mut<StaticMeshComponent>(entity) = StaticMeshComponent(mesh, material);
+}
+
+editor_action_(
+    "Add voxel cube", "", EditorAction::CallOnStartUp, /* no shortcut */, [] { add_debug_cube(); });
+
+VoxelView::VoxelView() : Slate(ICON_FA_DESKTOP " Voxel View",
+                               ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove),
+                         _resource_pool(std::make_shared<FrameGraphResourcePool>()),
+                         _scene_view(&current_world()),
+                         _camera_controller(std::make_unique<HoudiniCameraController>()),
+                         _gizmo(&_scene_view),
+                         _orientation_gizmo(&_scene_view) {
 }
 
 VoxelView::~VoxelView() noexcept {
@@ -84,9 +110,8 @@ void VoxelView::draw_imgui_frame() {
   float width = height * 1.2f;
 
   ImGui::SetNextWindowPos(ImVec2(view_start_pos_x, view_start_pos_y));
-  ImGui::SetNextWindowSize
-      (ImVec2(width, height),
-       ImGuiCond_Always);
+  ImGui::SetNextWindowSize(ImVec2(width, height),
+                           ImGuiCond_Always);
 
   bool opened = false;
 
@@ -123,7 +148,7 @@ void VoxelView::draw(CmdBufferRecorder &recorder) {
     builder.add_uniform_input(gbuffer.depth);
     builder.add_uniform_input(gbuffer.color);
     builder.add_uniform_input(gbuffer.normal);
-//    builder.add_uniform_input_with_default(renderer.renderer.ssao.ao, Descriptor(white));
+    //    builder.add_uniform_input_with_default(renderer.renderer.ssao.ao, Descriptor(white));
     builder.set_render_func([=, &output](RenderPassRecorder &render_pass, const FrameGraphPass *self) {
       auto out = std::make_unique<TextureView>(self->resources().image<ImageUsage::TextureBit>(output_image));
       output = out.get();
@@ -194,8 +219,7 @@ void VoxelView::draw_menu_bar() {
 
       {
         const char *output_names[] = {
-            "Alpha Blending", "ISO-Surfaces Extraction"
-        };
+            "Alpha Blending", "ISO-Surfaces Extraction"};
         for (usize i = 0; i < usize(RenderView::MaxRenderViews); ++i) {
           bool selected = usize(_view) == i;
           ImGui::MenuItem(output_names[i], nullptr, &selected);
@@ -223,10 +247,10 @@ void VoxelView::draw_menu_bar() {
       ImGui::EndMenu();
     }
 
-// Resolution settings
-//    if (ImGui::BeginMenu("Resolution")) {
-//
-//    }
+    // Resolution settings
+    //    if (ImGui::BeginMenu("Resolution")) {
+    //
+    //    }
   }
 
   draw_gizmo_tool_bar();
@@ -331,8 +355,7 @@ void VoxelView::update_picking() {
   const math::Vec2 mouse = ImGui::GetIO().MousePos;
   const math::Vec2 uv = (mouse - offset - math::Vec2(ImGui::GetWindowContentRegionMin())) / math::Vec2(viewport_size);
 
-  if (uv.x() < 0.0f || uv.y() < 0.0f ||
-      uv.x() > 1.0f || uv.y() > 1.0f) {
+  if (uv.x() < 0.0f || uv.y() < 0.0f || uv.x() > 1.0f || uv.y() > 1.0f) {
     return;
   }
 
@@ -361,4 +384,4 @@ void VoxelView::make_drop_target() {
   }
 }
 
-}
+}// namespace editor

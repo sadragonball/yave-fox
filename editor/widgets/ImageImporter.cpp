@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -30,12 +30,11 @@ SOFTWARE.
 #include <y/io2/Buffer.h>
 #include <y/serde3/archives.h>
 
-#include <yave/utils/PendingOpsQueue.h>
 #include <editor/utils/ui.h>
 #include <y/utils/format.h>
 #include <y/utils/log.h>
 
-#include <external/imgui/yave_imgui.h>
+
 
 namespace editor {
 

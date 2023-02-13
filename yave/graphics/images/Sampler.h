@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -31,7 +31,7 @@ namespace yave {
 Y_TODO(move to device)
 class Sampler final {
     public:
-        Sampler(VkSampler sampler);
+        Sampler(VkHandle<VkSampler> sampler);
         ~Sampler();
 
         Sampler(Sampler&&) = default;

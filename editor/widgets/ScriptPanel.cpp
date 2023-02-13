@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,7 @@ SOFTWARE.
 
 #include <yave/utils/FileSystemModel.h>
 
-#include <external/imgui/yave_imgui.h>
+
 
 #include <y/io2/File.h>
 
@@ -127,8 +127,8 @@ void ScriptPanel::on_gui() {
         }
 
 
-        const float text_height = imgui::text_line_count(_error) * imgui::button_height();
-        const math::Vec2 avail_size = math::Vec2(ImGui::GetContentRegionAvail()) - math::Vec2(0.0f, imgui::button_height() + text_height);
+        const float text_height = imgui::text_line_count(_error) * ImGui::GetFrameHeightWithSpacing();
+        const math::Vec2 avail_size = math::Vec2(ImGui::GetContentRegionAvail()) - math::Vec2(0.0f, ImGui::GetFrameHeightWithSpacing() + text_height);
         ImGui::InputTextMultiline("##console", _buffer.data(), _buffer.size(), avail_size);
 
         if(!_error.is_empty()) {

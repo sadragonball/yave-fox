@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -49,45 +49,51 @@ class EditorApplication : NonMovable {
 
         void save_world();
         void load_world();
+        void new_world();
 
 
         SceneView& scene_view() {
+            y_debug_assert(_scene_view);
             return *_scene_view;
         }
 
         AssetStore& asset_store() {
+            y_debug_assert(_asset_store);
             return *_asset_store;
         }
 
         AssetLoader& asset_loader() {
+            y_debug_assert(_loader);
             return *_loader;
         }
 
         UndoStack& undo_stack() {
+            y_debug_assert(_undo_stack);
             return *_undo_stack;
         }
 
         ThumbmailRenderer& thumbmail_renderer() {
+            y_debug_assert(_thumbmail_renderer);
             return *_thumbmail_renderer;
         }
 
         EditorWorld& world() {
+            y_debug_assert(_world);
             return *_world;
         }
 
         DirectDraw& debug_drawer() {
+            y_debug_assert(_debug_drawer);
             return *_debug_drawer;
         }
 
-        PendingOpsQueue& pending_ops_queue() {
-            return *_pending_ops_queue;
-        }
-
         const EditorResources& resources() const {
+            y_debug_assert(_resources);
             return *_resources;
         }
 
         UiManager& ui() {
+            y_debug_assert(_ui);
             return *_ui;
         }
 
@@ -106,20 +112,16 @@ class EditorApplication : NonMovable {
 
         ImGuiPlatform* _platform = nullptr;
 
-        std::unique_ptr<EditorResources> _resources;
+        core::String _world_file;
 
+        std::unique_ptr<EditorResources> _resources;
         std::shared_ptr<AssetStore> _asset_store;
         std::unique_ptr<AssetLoader> _loader;
         std::unique_ptr<ThumbmailRenderer> _thumbmail_renderer;
-
-        std::unique_ptr<EditorWorld> _world;
         std::unique_ptr<DirectDraw> _debug_drawer;
-
         std::unique_ptr<UiManager> _ui;
-
         std::unique_ptr<UndoStack> _undo_stack;
-
-        std::unique_ptr<PendingOpsQueue> _pending_ops_queue;
+        std::unique_ptr<EditorWorld> _world;
 
         CmdBufferRecorder* _recorder = nullptr;
 
@@ -127,9 +129,10 @@ class EditorApplication : NonMovable {
         SceneView* _scene_view = nullptr;
 
         enum DeferredActions : u32 {
-            None = 0x00,
-            Save = 0x01,
-            Load = 0x02,
+            None    = 0x00,
+            Save    = 0x01,
+            Load    = 0x02,
+            New     = 0x04,
         };
 
         u32 _deferred_actions = None;

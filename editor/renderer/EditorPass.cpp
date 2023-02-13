@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -45,7 +45,7 @@ SOFTWARE.
 #include <yave/utils/DirectDraw.h>
 #include <yave/utils/entities.h>
 
-#include <external/imgui/yave_imgui.h>
+#include <editor/utils/ui.h>
 
 // we actually need this to index utf-8 chars from the imgui font (defined in imgui_internal)
 IMGUI_API int ImTextCharFromUtf8(unsigned int* out_char, const char* in_text, const char* in_text_end);
@@ -72,7 +72,7 @@ static std::pair<math::Vec2, math::Vec2> compute_uv_size(const char* c) {
 
     unsigned u = 0;
     ImTextCharFromUtf8(&u, c, c + std::strlen(c));
-    if(const ImFontGlyph* glyph = ImGui::GetFont()->FindGlyph(u)) {
+    if(const ImFontGlyph* glyph = ImGui::GetFont()->FindGlyph(ImWchar(u))) {
         uv = math::Vec2{glyph->U0, glyph->V0};
         size = math::Vec2{glyph->U1, glyph->V1} - uv;
     }

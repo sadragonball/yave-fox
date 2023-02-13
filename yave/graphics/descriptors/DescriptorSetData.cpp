@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -27,14 +27,27 @@ namespace yave {
 DescriptorSetData::DescriptorSetData(DescriptorSetPool* pool, u32 id) : _pool(pool), _index(id) {
 }
 
+DescriptorSetData::DescriptorSetData(DescriptorSetData&& other) {
+    swap(other);
+}
+
+DescriptorSetData& DescriptorSetData::operator=(DescriptorSetData&& other) {
+    swap(other);
+    return *this;
+}
+
+void DescriptorSetData::swap(DescriptorSetData& other) {
+    std::swap(_pool, other._pool);
+    std::swap(_index, other._index);
+}
+
 bool DescriptorSetData::is_null() const {
     return !_pool;
 }
 
 void DescriptorSetData::recycle() {
-    if(_pool) {
-        _pool->recycle(_index);
-    }
+    y_debug_assert(_pool);
+    _pool->recycle(_index);
 }
 
 VkDescriptorSetLayout DescriptorSetData::vk_descriptor_set_layout() const {

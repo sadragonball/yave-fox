@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -434,23 +434,13 @@ void wait_all_queues() {
 }
 
 #define YAVE_GENERATE_DESTROY_IMPL(T)                                                   \
-    void destroy_graphic_resource(T t) {                                                \
-        if(t) {                                                                         \
-            lifetime_manager().destroy_later(std::move(t));                             \
-        }                                                                               \
-    }
-
-YAVE_VK_RESOURCE_TYPES(YAVE_GENERATE_DESTROY_IMPL)
-#undef YAVE_GENERATE_DESTROY_IMPL
-
-#define YAVE_GENERATE_DESTROY_IMPL(T)                                                   \
-    void destroy_graphic_resource(T t) {                                                \
+    void destroy_graphic_resource(T&& t) {                                              \
         if(!t.is_null()) {                                                              \
             lifetime_manager().destroy_later(std::move(t));                             \
+            y_debug_assert(t.is_null());                                                \
         }                                                                               \
     }
-
-YAVE_YAVE_RESOURCE_TYPES(YAVE_GENERATE_DESTROY_IMPL)
+YAVE_GRAPHIC_HANDLE_TYPES(YAVE_GENERATE_DESTROY_IMPL)
 #undef YAVE_GENERATE_DESTROY_IMPL
 
 }

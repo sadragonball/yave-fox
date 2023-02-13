@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,10 @@ SOFTWARE.
 #include <editor/Widget.h>
 #include <editor/renderer/EditorRenderer.h>
 
+#include <yave/graphics/images/ImageView.h>
 #include <yave/scene/SceneView.h>
+
+#include <deque>
 
 namespace editor {
 
@@ -54,11 +57,15 @@ class EngineView final : public Widget {
         EngineView();
         ~EngineView() override;
 
+        CmdTimingRecorder* timing_recorder() const;
+
     protected:
         void on_gui() override;
 
         bool before_gui() override;
         void after_gui() override;
+
+        bool should_keep_alive() const override;
 
     private:
         void draw(CmdBufferRecorder& recorder);
@@ -78,6 +85,7 @@ class EngineView final : public Widget {
         RenderView _view = RenderView::Lit;
 
         std::shared_ptr<FrameGraphResourcePool> _resource_pool;
+        std::deque<std::unique_ptr<CmdTimingRecorder>> _time_recs;
 
         EditorRendererSettings _settings;
 

@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -76,6 +76,7 @@ void Y_TEST_FUNC(y::test::detail::TestResult& _y_test_result)
 #define y_test_assert(t) do { y::unused(t); } while(false)
 
 #define y_test_func(name)                                                                               \
+[[maybe_unused]]                                                                                        \
 static void Y_TEST_FUNC(y::test::detail::TestResult& _y_test_result)
 
 #endif

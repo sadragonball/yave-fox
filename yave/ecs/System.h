@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -40,15 +40,17 @@ class System : NonCopyable {
             return _name;
         }
 
-        virtual void tick(EntityWorld& world) {
+        virtual void tick(EntityWorld&) {
             // nothing
         }
 
-        virtual void update(EntityWorld& world, float dt) {
+        virtual void update(EntityWorld&, float dt) {
+            unused(dt);
             // nothing
         }
 
-        virtual void fixed_update(EntityWorld& world, float dt) {
+        virtual void fixed_update(EntityWorld&, float dt) {
+            unused(dt);
             // nothing
         }
 

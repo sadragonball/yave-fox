@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,7 @@ SOFTWARE.
 #include <y/utils/log.h>
 #include <y/utils/format.h>
 
-#include <external/imgui/yave_imgui.h>
+
 
 
 namespace editor {
@@ -97,7 +97,7 @@ bool FileBrowser::has_valid_extension(std::string_view filename) const {
 bool FileBrowser::done(const core::String& filename) {
     y_profile();
     const bool valid_dir = filesystem()->is_directory(filename).unwrap_or(false);
-    const bool valid_file = has_valid_extension(filename) && filesystem()->is_file(filename).unwrap_or(false);
+    const bool valid_file = /*has_valid_extension(filename) &&*/ filesystem()->is_file(filename).unwrap_or(false);
 
     bool changed = true;
     if((valid_dir && _dirs) || valid_file) {

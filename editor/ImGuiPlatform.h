@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -35,6 +35,7 @@ SOFTWARE.
 #include <functional>
 
 struct ImGuiViewport;
+struct ImGuiTestEngine;
 
 namespace editor {
 
@@ -59,12 +60,13 @@ class ImGuiPlatform : NonMovable {
     public:
         using OnGuiFunc = std::function<void(CmdBufferRecorder&)>;
 
-        ImGuiPlatform(bool multi_viewport = true);
+        ImGuiPlatform(bool multi_viewport = true, bool run_tests = false);
         ~ImGuiPlatform();
 
         static ImGuiPlatform* instance();
 
         const ImGuiRenderer* renderer() const;
+        bool is_running_tests() const;
 
         Window* main_window();
 
@@ -92,6 +94,8 @@ class ImGuiPlatform : NonMovable {
         core::Chrono _frame_timer;
 
         bool _demo_window = is_debug_defined;
+
+        ImGuiTestEngine* _test_engine = nullptr;
 };
 
 }

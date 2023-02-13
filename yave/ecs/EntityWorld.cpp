@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -295,13 +295,11 @@ void EntityWorld::make_mutated(ComponentTypeIndex type_id, core::Span<EntityId> 
 
 const ComponentContainerBase* EntityWorld::find_container(ComponentTypeIndex type_id) const {
     y_debug_assert(_containers.size() > type_id);
-    y_debug_assert(_containers[type_id] != nullptr);
     return _containers[type_id].get();
 }
 
 ComponentContainerBase* EntityWorld::find_container(ComponentTypeIndex type_id) {
     y_debug_assert(_containers.size() > type_id);
-    y_debug_assert(_containers[type_id] != nullptr);
     return _containers[type_id].get();
 }
 

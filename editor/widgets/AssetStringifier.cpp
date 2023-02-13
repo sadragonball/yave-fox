@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,7 @@ SOFTWARE.
 #include <y/utils/format.h>
 #include <y/serde3/archives.h>
 
-#include <external/imgui/yave_imgui.h>
+#include <editor/utils/ui.h>
 
 namespace yave {
 

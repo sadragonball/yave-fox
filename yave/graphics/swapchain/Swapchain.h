@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -45,7 +45,8 @@ class Swapchain : NonMovable {
 
             ~SwapchainImage() {
                 // prevents images to delete their VkImage, this is already done by the swapchain
-                _image = {};
+                VkHandle<VkImage> drop = std::move(_image);
+                drop.consume();
             }
 
         private:
@@ -54,14 +55,14 @@ class Swapchain : NonMovable {
             SwapchainImage() = default;
     };
 
-    struct Semaphores {
-        VkSemaphore image_aquired = vk_null();
-        VkSemaphore render_complete = vk_null();
-        VkFence fence = vk_null();
+    struct FrameSyncObjects {
+        VkHandle<VkSemaphore> image_available;
+        VkHandle<VkSemaphore> render_complete;
+        VkHandle<VkFence> fence;
     };
 
     public:
-        Swapchain(VkSurfaceKHR surface);
+        Swapchain(VkHandle<VkSurfaceKHR> surface);
         Swapchain(Window* window);
         ~Swapchain();
 
@@ -84,8 +85,8 @@ class Swapchain : NonMovable {
         [[nodiscard]] bool reset();
 
         bool build_swapchain();
-        void build_semaphores();
-        void destroy_semaphores();
+        void build_sync_objects();
+        void destroy_sync_objects();
 
         u64 _frame_id = 0;
 
@@ -93,7 +94,9 @@ class Swapchain : NonMovable {
         ImageFormat _color_format;
 
         core::Vector<SwapchainImage> _images;
-        core::Vector<Semaphores> _semaphores;
+
+        core::Vector<FrameSyncObjects> _sync_objects;
+        core::Vector<NotOwner<VkFence>> _image_fences;
 
         VkHandle<VkSurfaceKHR> _surface;
         VkHandle<VkSwapchainKHR> _swapchain;

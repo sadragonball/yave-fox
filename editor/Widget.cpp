@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,9 +22,23 @@ SOFTWARE.
 
 #include "Widget.h"
 
-#include <external/imgui/yave_imgui.h>
+#include <editor/utils/ui.h>
 
 namespace editor {
+
+namespace detail {
+EditorWidget* first_widget = nullptr;
+void register_widget(EditorWidget* widget) {
+    log_msg(fmt("Registering widget \"%\"", widget->name), Log::Debug);
+    widget->next = first_widget;
+    first_widget = widget;
+}
+}
+
+const EditorWidget* all_widgets() {
+    return detail::first_widget;
+}
+
 
 Widget::Widget(std::string_view title, int flags) : _flags(flags) {
     set_title(title);

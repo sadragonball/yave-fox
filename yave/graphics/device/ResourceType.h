@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -27,25 +27,25 @@ SOFTWARE.
 
 namespace yave {
 
-#define YAVE_VK_RESOURCE_TYPES(X)           \
-    X(VkBuffer)                             \
-    X(VkImage)                              \
-    X(VkImageView)                          \
-    X(VkRenderPass)                         \
-    X(VkFramebuffer)                        \
-    X(VkPipeline)                           \
-    X(VkPipelineLayout)                     \
-    X(VkShaderModule)                       \
-    X(VkSampler)                            \
-    X(VkSwapchainKHR)                       \
-    X(VkCommandPool)                        \
-    X(VkFence)                              \
-    X(VkDescriptorPool)                     \
-    X(VkDescriptorSetLayout)                \
-    X(VkSemaphore)                          \
-    X(VkQueryPool)                          \
-    X(VkEvent)                              \
-    X(VkSurfaceKHR)
+#define YAVE_VK_HANDLES_TYPES(X)            \
+    X(VkHandle<VkBuffer>)                   \
+    X(VkHandle<VkImage>)                    \
+    X(VkHandle<VkImageView>)                \
+    X(VkHandle<VkRenderPass>)               \
+    X(VkHandle<VkFramebuffer>)              \
+    X(VkHandle<VkPipeline>)                 \
+    X(VkHandle<VkPipelineLayout>)           \
+    X(VkHandle<VkShaderModule>)             \
+    X(VkHandle<VkSampler>)                  \
+    X(VkHandle<VkSwapchainKHR>)             \
+    X(VkHandle<VkCommandPool>)              \
+    X(VkHandle<VkFence>)                    \
+    X(VkHandle<VkDescriptorPool>)           \
+    X(VkHandle<VkDescriptorSetLayout>)      \
+    X(VkHandle<VkSemaphore>)                \
+    X(VkHandle<VkQueryPool>)                \
+    X(VkHandle<VkEvent>)                    \
+    X(VkHandle<VkSurfaceKHR>)
 
 #define YAVE_YAVE_RESOURCE_TYPES(X)         \
     X(DeviceMemory)                         \
@@ -56,6 +56,9 @@ namespace yave {
     YAVE_YAVE_RESOURCE_TYPES(X)             \
     YAVE_VK_RESOURCE_TYPES(X)
 
+#define YAVE_GRAPHIC_HANDLE_TYPES(X)        \
+    YAVE_YAVE_RESOURCE_TYPES(X)             \
+    YAVE_VK_HANDLES_TYPES(X)
 
 }
 

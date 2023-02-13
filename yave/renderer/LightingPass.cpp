@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -374,8 +374,7 @@ static void local_lights_pass(FrameGraph& framegraph,
             render_pass.bind_material_template(material, self->descriptor_sets()[0]);
 
             {
-                const auto transforms = self->resources().buffer<BufferUsage::AttributeBit>(transform_buffer);
-                render_pass.bind_per_instance_attrib_buffers(transforms);
+                render_pass.bind_per_instance_attrib_buffers(self->resources().buffer<BufferUsage::AttributeBit>(transform_buffer));
 
                 const StaticMesh& cone = *device_resources()[DeviceResources::ConeMesh];
                 render_pass.draw(cone.draw_data(), spot_count);

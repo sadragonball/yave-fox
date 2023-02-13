@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +33,7 @@ SOFTWARE.
 #include <y/utils/log.h>
 #include <y/utils/format.h>
 
-#include <external/imgui/yave_imgui.h>
+
 
 namespace editor {
 
@@ -51,6 +51,8 @@ void ComponentPanel::on_gui() {
     if(!id.is_valid()) {
         if(const usize selected_count = current_world().selected_entity_count(); selected_count > 1) {
             ImGui::Text("%u selected entities", u32(selected_count));
+        } else {
+            ImGui::TextUnformatted("No entity selected");
         }
         return;
     }

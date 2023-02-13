@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -390,7 +390,8 @@ class [[nodiscard]] Result : NonCopyable {
 
         template<typename A, typename B>
         inline void move(Result<A, B>& other) {
-            if((_is_ok = other.is_ok())) {
+            _is_ok = other.is_ok();
+            if(_is_ok) {
                 if constexpr(!std::is_void_v<decltype(other._value)>) {
                     ::new(&_value) ok_type(std::move(other._value));
                 } else {

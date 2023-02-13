@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -82,8 +82,8 @@ static Texture render_world(const ecs::EntityWorld& world) {
             builder.add_uniform_input(renderer.gbuffer.depth);
             builder.add_external_input(StorageView(out));
             builder.set_render_func([size = out.size()](CmdBufferRecorder& rec, const FrameGraphPass* self) {
-                    rec.dispatch_size(resources()[EditorResources::DepthAlphaProgram], size, {self->descriptor_sets()[0]});
-                });
+                rec.dispatch_size(resources()[EditorResources::DepthAlphaProgram], size, {self->descriptor_sets()[0]});
+            });
         }
 
         graph.render(recorder);

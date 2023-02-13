@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,8 @@ SOFTWARE.
 
 #include <y/utils/types.h>
 
-#define y_defer(expr) auto y_create_name_with_prefix(defer) = y::ScopeGuard([&]() { expr; })
+#define y_defer_named(expr, name)   auto y_create_name_with_prefix(defer_ ## name) = y::ScopeGuard([&]() { expr; })
+#define y_defer(expr)               auto y_create_name_with_prefix(defer)          = y::ScopeGuard([&]() { expr; })
 
 namespace y {
 

@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -42,7 +42,7 @@ class LifetimeManager : NonMovable {
 
     using ManagedResource = std::variant<
 #define YAVE_GENERATE_RT_VARIANT(T) T,
-YAVE_GRAPHIC_RESOURCE_TYPES(YAVE_GENERATE_RT_VARIANT)
+YAVE_GRAPHIC_HANDLE_TYPES(YAVE_GENERATE_RT_VARIANT)
 #undef YAVE_GENERATE_RT_VARIANT
         EmptyResource
         >;
@@ -68,7 +68,7 @@ YAVE_GRAPHIC_RESOURCE_TYPES(YAVE_GENERATE_RT_VARIANT)
             const auto lock = y_profile_unique_lock(_resources_lock);               \
             _to_destroy.emplace_back(_create_counter, ManagedResource(y_fwd(t)));   \
         }
-YAVE_GRAPHIC_RESOURCE_TYPES(YAVE_GENERATE_DESTROY)
+YAVE_GRAPHIC_HANDLE_TYPES(YAVE_GENERATE_DESTROY)
 #undef YAVE_GENERATE_DESTROY
 
     private:

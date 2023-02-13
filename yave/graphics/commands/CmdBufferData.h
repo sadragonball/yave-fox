@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -72,10 +72,6 @@ class TimelineFence {
 
 
 class CmdBufferData final : NonMovable {
-    struct KeepAlive : NonCopyable {
-        virtual ~KeepAlive() {}
-    };
-
     public:
         CmdBufferData(VkCommandBuffer buf, CmdBufferPool* p);
         ~CmdBufferData();
@@ -92,28 +88,15 @@ class CmdBufferData final : NonMovable {
         void wait();
         bool poll();
 
-        template<typename T>
-        void keep_alive(T&& t) {
-            struct Box : KeepAlive {
-                Box(T&& t) : _t(y_fwd(t)) {}
-                ~Box() override {}
-                std::remove_reference_t<T> _t;
-            };
-            _keep_alive.emplace_back(std::make_unique<Box>(y_fwd(t)));
-        }
-
     private:
         friend class CmdBufferPool;
         friend class CmdQueue;
 
         void begin();
-        void recycle_resources(); // This can not be called while pool's _pending_lock is locked
-
 
         // These are owned by the command pool
-        VkCommandBuffer _cmd_buffer;
+        VkCommandBuffer _cmd_buffer = {};
 
-        core::Vector<std::unique_ptr<KeepAlive>> _keep_alive;
         CmdBufferPool* _pool = nullptr;
 
         ResourceFence _resource_fence;

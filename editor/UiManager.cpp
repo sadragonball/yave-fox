@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,8 +29,6 @@ SOFTWARE.
 #include <yave/assets/AssetLoader.h>
 #include <y/core/HashMap.h>
 
-#include <external/imgui/yave_imgui.h>
-
 #include <regex>
 #include <tuple>
 
@@ -52,8 +50,6 @@ static core::String shortcut_text(KeyCombination shortcut) {
 }
 
 
-
-
 UiManager::UiManager() {
     for(const EditorAction* action = all_actions(); action; action = action->next) {
         _actions << action;
@@ -72,6 +68,10 @@ UiManager::~UiManager() {
 
 void UiManager::on_gui() {
     y_profile();
+
+    if(!_frame_number) {
+        open_default_widgets();
+    }
 
     update_fps_counter();
     update_shortcuts();
@@ -257,9 +257,26 @@ Widget* UiManager::add_widget(std::unique_ptr<Widget> widget, bool auto_parent) 
     return wid;
 }
 
+void UiManager::restore_default_layout() {
+    close_all();
+    open_default_widgets();
+}
+
+void UiManager::open_default_widgets() {
+    for(const EditorWidget* widget = all_widgets(); widget; widget = widget->next) {
+        if(widget->open_on_startup) {
+            widget->create();
+        }
+    }
+}
+
 void UiManager::close_all() {
     _widgets.clear();
     _ids.clear();
+}
+
+core::Span<std::unique_ptr<Widget>> UiManager::widgets() const {
+    return _widgets;
 }
 
 void UiManager::set_widget_id(Widget* widget) {

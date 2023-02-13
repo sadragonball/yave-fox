@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@ SOFTWARE.
 namespace editor {
 
 AssetSelector::AssetSelector(AssetType filter, const char* name) :
-        ResourceBrowser(name ? std::string_view(name) : fmt("Select %", asset_type_name(filter))),
+        ResourceBrowser(name ? std::string_view(name) : fmt("Select %", asset_type_name(filter, false, true))),
         _filter(filter) {
 }
 

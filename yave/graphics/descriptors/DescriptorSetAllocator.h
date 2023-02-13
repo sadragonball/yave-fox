@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -114,7 +114,7 @@ class DescriptorSetPool : NonMovable {
 
         std::array<VkDescriptorSet, pool_size> _sets;
         VkHandle<VkDescriptorPool> _pool;
-        VkHandle<VkDescriptorSetLayout> _layout;
+        NotOwner<VkDescriptorSetLayout> _layout;
 
         usize _inline_blocks = 0;
         u64 _descriptor_buffer_size = 0;

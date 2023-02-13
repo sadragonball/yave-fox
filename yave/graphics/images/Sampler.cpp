@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,11 +26,11 @@ SOFTWARE.
 
 namespace yave {
 
-Sampler::Sampler(VkSampler sampler) : _sampler(sampler) {
+Sampler::Sampler(VkHandle<VkSampler> sampler) : _sampler(std::move(sampler)) {
 }
 
 Sampler::~Sampler() {
-    destroy_graphic_resource(_sampler);
+    destroy_graphic_resource(std::move(_sampler));
 }
 
 VkSampler Sampler::vk_sampler() const {

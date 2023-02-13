@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -44,7 +44,7 @@ class ImGuiRenderer {
         Texture _font;
         TextureView _font_view;
 
-        // We could go through the editor resources,
+        // We could go through the editor resources
         MaterialTemplate _material;
 };
 

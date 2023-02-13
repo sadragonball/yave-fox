@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -56,8 +56,6 @@ const SceneView& scene_view();
 
 DirectDraw& debug_drawer();
 
-PendingOpsQueue& pending_ops_queue();
-
 const EditorResources& resources();
 UiManager& ui();
 
@@ -78,10 +76,6 @@ T* add_detached_widget(Args&&... args) {
 
 
 struct EditorAction {
-    enum Flags : u32 {
-        CallOnStartUp           = 0x01,
-    };
-
     std::string_view name;
     std::string_view description;
     u32 flags = 0;
@@ -101,7 +95,7 @@ void register_action(EditorAction* action);
 
 
 #define editor_action_(name, desc, flags, shortcut, func, ...)                                          \
-    struct y_create_name_with_prefix(trigger_t) {                                                       \
+    struct y_create_name_with_prefix(action_trigger_t) {                                                \
         inline static struct action_register_t {                                                        \
             action_register_t() {                                                                       \
                 static constexpr std::string_view names[] = { name, __VA_ARGS__ };                      \

@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -374,8 +374,8 @@ class EntityWorld {
                 // This shouldn't be UB as component containers are never const
                 using component_type = traits::component_raw_type_t<T>;
                 ComponentContainerBase* container = const_cast<ComponentContainerBase*>(find_container<component_type>());
-                y_debug_assert(container);
-                return std::tuple{&container->component_set<component_type>()};
+                auto* set = container ? &container->component_set<component_type>() : nullptr;
+                return std::tuple{set};
             }
         }
 

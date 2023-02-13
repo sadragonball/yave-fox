@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -53,7 +53,7 @@ TransientImage<> FrameGraphResourcePool::create_image(ImageFormat format, const 
     }
 
     y_profile_zone("create image");
-    return TransientImage<>(format, usage, size);;
+    return TransientImage<>(format, usage, size);
 }
 
 TransientBuffer FrameGraphResourcePool::create_buffer(u64 byte_size, BufferUsage usage, MemoryType memory) {

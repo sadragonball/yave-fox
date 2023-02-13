@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -245,8 +245,9 @@ class ComponentContainer final : public ComponentContainerBase {
             unused(id);
             if constexpr(std::is_copy_constructible_v<T>) {
                 return std::make_unique<ComponentBox<T>>(_components[id]);
+            } else {
+                return nullptr;
             }
-            return nullptr;
         }
 
 

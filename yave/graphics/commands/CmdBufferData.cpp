@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -109,7 +109,6 @@ TimelineFence CmdBufferData::queue_fence() const {
 void CmdBufferData::wait() {
     y_profile();
     wait_for_fence(_timeline_fence);
-    recycle_resources();
 }
 
 bool CmdBufferData::poll() {
@@ -119,17 +118,9 @@ bool CmdBufferData::poll() {
 void CmdBufferData::begin() {
     y_profile();
 
-    y_debug_assert(_keep_alive.is_empty());
-
     vk_check(vkResetCommandBuffer(_cmd_buffer, 0));
 
     _resource_fence = lifetime_manager().create_fence();
-}
-
-void CmdBufferData::recycle_resources() {
-    y_profile();
-
-    _keep_alive.clear();
 }
 
 

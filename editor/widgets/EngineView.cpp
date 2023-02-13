@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -35,12 +35,12 @@ SOFTWARE.
 #include <yave/framegraph/FrameGraphFrameResources.h>
 #include <yave/framegraph/FrameGraphResourcePool.h>
 #include <yave/graphics/commands/CmdBufferRecorder.h>
+#include <yave/graphics/commands/CmdTimingRecorder.h>
 #include <yave/graphics/device/DeviceResources.h>
 
 #include <yave/utils/color.h>
 
-#include <external/imgui/yave_imgui.h>
-
+#include <editor/utils/ui.h>
 
 namespace editor {
 
@@ -99,6 +99,13 @@ EngineView::~EngineView() {
     application()->unset_scene_view(&_scene_view);
 }
 
+CmdTimingRecorder* EngineView::timing_recorder() const {
+    if(!_time_recs.empty() && _time_recs.front()->is_data_ready()) {
+        return _time_recs.front().get();
+    }
+    return nullptr;
+}
+
 bool EngineView::is_mouse_inside() const {
     const math::Vec2 mouse_pos = math::Vec2(ImGui::GetIO().MousePos) - math::Vec2(ImGui::GetWindowPos());
     const auto less = [](const math::Vec2& a, const math::Vec2& b) { return a.x() < b.x() && a.y() < b.y(); };
@@ -107,6 +114,16 @@ bool EngineView::is_mouse_inside() const {
 
 bool EngineView::is_focussed() const {
     return ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
+}
+
+
+bool EngineView::should_keep_alive() const {
+    for(const auto& t : _time_recs) {
+        if(!t->is_data_ready()) {
+            return true;
+        }
+    }
+    return false;
 }
 
 
@@ -127,21 +144,28 @@ void EngineView::after_gui() {
 }
 
 void EngineView::draw(CmdBufferRecorder& recorder) {
-    TextureView* output = nullptr;
-    FrameGraph graph(_resource_pool);
+    while(_time_recs.size() >= 2) {
+        if(_time_recs[0]->is_data_ready() && _time_recs[1]->is_data_ready()) {
+            _time_recs.pop_front();
+        } else {
+            break;
+        }
+    }
 
     const math::Vec2ui output_size = _resolution < 0 ? content_size() : standard_resolutions()[_resolution].second;
-    const EditorRenderer renderer = EditorRenderer::create(graph, _scene_view, output_size, _settings);
 
+    UiTexture output;
+    FrameGraph graph(_resource_pool);
+    const EditorRenderer renderer = EditorRenderer::create(graph, _scene_view, output_size, _settings);
     {
         const Texture& white = *device_resources()[DeviceResources::WhiteTexture];
 
-        FrameGraphPassBuilder builder = graph.add_pass("ImGui texture pass");
+        FrameGraphComputePassBuilder builder = graph.add_compute_pass("ImGui texture pass");
 
         const auto output_image = builder.declare_image(VK_FORMAT_R8G8B8A8_UNORM, output_size);
 
         const auto gbuffer = renderer.renderer.gbuffer;
-        builder.add_image_input_usage(output_image, ImageUsage::TextureBit);
+        builder.add_image_input_usage(output_image, ImageUsage::TransferSrcBit);
         builder.add_color_output(output_image);
         builder.add_inline_input(InlineDescriptor(_view), 0);
         builder.add_uniform_input(renderer.final);
@@ -149,23 +173,26 @@ void EngineView::draw(CmdBufferRecorder& recorder) {
         builder.add_uniform_input(gbuffer.color);
         builder.add_uniform_input(gbuffer.normal);
         builder.add_uniform_input_with_default(renderer.renderer.ssao.ao, Descriptor(white));
-        builder.set_render_func([=, &output](RenderPassRecorder& render_pass, const FrameGraphPass* self) {
-                auto out = std::make_unique<TextureView>(self->resources().image<ImageUsage::TextureBit>(output_image));
-                output = out.get();
-                render_pass.keep_alive(std::move(out));
-
+        builder.set_render_func([=, &output](CmdBufferRecorder& recorder, const FrameGraphPass* self) {
+            {
+                auto render_pass = recorder.bind_framebuffer(self->framebuffer());
                 const MaterialTemplate* material = resources()[EditorResources::EngineViewMaterialTemplate];
                 render_pass.bind_material_template(material, self->descriptor_sets()[0]);
                 render_pass.draw_array(3);
-            });
+            }
+            const auto& src = self->resources().image_base(output_image);
+            output = UiTexture(src.format(), src.image_size().to<2>());
+            recorder.barriered_copy(src, output.texture());
+        });
     }
 
     if(!_disable_render) {
-        graph.render(recorder);
+        CmdTimingRecorder* time_rec = _time_recs.emplace_back(std::make_unique<CmdTimingRecorder>(recorder)).get();
+        graph.render(recorder, time_rec);
     }
 
     if(output) {
-        ImGui::Image(output, content_size());
+        ImGui::Image(output.to_imgui(), content_size());
     }
 }
 
@@ -279,7 +306,7 @@ void EngineView::draw_menu_bar() {
             ImGui::Separator();
             {
                 const char* output_names[] = {
-                        "Lit", "Albedo", "Normals", "Metallic", "Roughness", "Depth", "AO", "GI"
+                        "Lit", "Albedo", "Normals", "Metallic", "Roughness", "Depth", "AO",
                     };
                 for(usize i = 0; i != usize(RenderView::MaxRenderViews); ++i) {
                     bool selected = usize(_view) == i;
@@ -404,10 +431,10 @@ void EngineView::draw_gizmo_tool_bar() {
 
     if(is_focussed()) {
         const UiSettings& settings = app_settings().ui;
-        if(ImGui::IsKeyReleased(int(settings.change_gizmo_mode))) {
+        if(ImGui::IsKeyReleased(to_imgui_key(settings.change_gizmo_mode))) {
             gizmo_mode = Gizmo::Mode(!usize(gizmo_mode));
         }
-        if(ImGui::IsKeyReleased(int(settings.change_gizmo_space))) {
+        if(ImGui::IsKeyReleased(to_imgui_key(settings.change_gizmo_space))) {
             gizmo_space = Gizmo::Space(!usize(gizmo_space));
         }
     }
@@ -425,12 +452,16 @@ void EngineView::draw_gizmo_tool_bar() {
 // ---------------------------------------------- UPDATE ----------------------------------------------
 
 void EngineView::update() {
+    const bool hovered = ImGui::IsWindowHovered() && is_mouse_inside();
+    if(!hovered) {
+        _gizmo.set_allow_drag(false);
+        return;
+    }
+
     _gizmo.set_allow_drag(true);
 
-    const bool hovered = ImGui::IsWindowHovered() && is_mouse_inside();
-
     bool focussed = ImGui::IsWindowFocused();
-    if(hovered && is_clicked()) {
+    if(is_clicked()) {
         ImGui::SetWindowFocus();
         update_picking();
         focussed = true;
@@ -440,7 +471,7 @@ void EngineView::update() {
         application()->set_scene_view(&_scene_view);
     }
 
-    if(hovered && !_gizmo.is_dragging() && !_orientation_gizmo.is_dragging() && _camera_controller) {
+    if(!_gizmo.is_dragging() && !_orientation_gizmo.is_dragging() && _camera_controller) {
         auto& camera = _scene_view.camera();
         _camera_controller->process_generic_shortcuts(camera);
         if(focussed) {

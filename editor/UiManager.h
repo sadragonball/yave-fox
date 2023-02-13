@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -51,7 +51,11 @@ class UiManager : NonMovable {
 
         Widget* add_widget(std::unique_ptr<Widget> widget, bool auto_parent = true);
 
+        void restore_default_layout();
+        void open_default_widgets();
         void close_all();
+
+        core::Span<std::unique_ptr<Widget>> widgets() const;
 
     private:
         void update_fps_counter();

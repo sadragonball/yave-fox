@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -31,20 +31,23 @@ SOFTWARE.
 
 namespace yave {
 
-class CmdBufferRegion {
+class CmdBufferRegion : NonCopyable {
     public:
         CmdBufferRegion() = default;
-        CmdBufferRegion(CmdBufferRegion&&) = default;
-        CmdBufferRegion& operator=(CmdBufferRegion&&) = default;
-
         ~CmdBufferRegion();
+
+        CmdBufferRegion(CmdBufferRegion&& other);
+        CmdBufferRegion& operator=(CmdBufferRegion&& other);
+
+        void swap(CmdBufferRegion& other);
 
     private:
         friend class CmdBufferRecorder;
 
-        CmdBufferRegion(const CmdBufferRecorder& cmd_buffer, const char* name, const math::Vec4& color);
+        CmdBufferRegion(const CmdBufferRecorder& cmd_buffer, CmdTimingRecorder* time_rec, const char* name, const math::Vec4& color);
 
-        VkHandle<VkCommandBuffer> _buffer = {};
+        VkCommandBuffer _buffer = {};
+        CmdTimingRecorder* _time_recorder = nullptr;
 };
 
 class RenderPassRecorder final : NonMovable {
@@ -73,7 +76,7 @@ class RenderPassRecorder final : NonMovable {
         void bind_per_instance_attrib_buffers(core::Span<AttribSubBuffer> per_instance);
 
         // proxies from _cmd_buffer
-        CmdBufferRegion region(const char* name, const math::Vec4& color = math::Vec4());
+        CmdBufferRegion region(const char* name, CmdTimingRecorder* time_rec = nullptr, const math::Vec4& color = math::Vec4());
 
         VkCommandBuffer vk_cmd_buffer() const;
 
@@ -81,10 +84,6 @@ class RenderPassRecorder final : NonMovable {
         const Viewport& viewport() const;
         void set_viewport(const Viewport& vp);
         void set_scissor(const math::Vec2i& offset, const math::Vec2ui& size);
-
-
-        template<typename T>
-        void keep_alive(T&& t);
 
     private:
         friend class CmdBufferRecorder;
@@ -118,7 +117,7 @@ class CmdBufferRecorder final : NonCopyable {
         VkCommandBuffer vk_cmd_buffer() const;
         ResourceFence resource_fence() const;
 
-        CmdBufferRegion region(const char* name, const math::Vec4& color = math::Vec4());
+        CmdBufferRegion region(const char* name, CmdTimingRecorder* time_rec = nullptr, const math::Vec4& color = math::Vec4());
 
         bool is_inside_renderpass() const;
         RenderPassRecorder bind_framebuffer(const Framebuffer& framebuffer);
@@ -135,19 +134,10 @@ class CmdBufferRecorder final : NonCopyable {
         void full_barrier();
 
 
-
         Y_TODO(Const all this)
         void barriered_copy(const ImageBase& src,  const ImageBase& dst);
         void copy(SrcCopySubBuffer src, DstCopySubBuffer dst);
-        //void copy(const SrcCopyImage& src,  const DstCopyImage& dst);
-        void blit(const SrcCopyImage& src,  const DstCopyImage& dst);
 
-
-
-        template<typename T>
-        void keep_alive(T&& t) {
-            _data->keep_alive(y_fwd(t));
-        }
 
     private:
         friend class ImageBase;
@@ -171,12 +161,6 @@ class CmdBufferRecorder final : NonCopyable {
         // this could be in RenderPassRecorder, but putting it here makes erroring easier
         const RenderPass* _render_pass = nullptr;
 };
-
-
-template<typename T>
-void RenderPassRecorder::keep_alive(T&& t) {
-   _cmd_buffer.keep_alive(y_fwd(t));
-}
 
 }
 

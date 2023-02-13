@@ -1,5 +1,5 @@
 ﻿/*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -32,15 +32,15 @@ SOFTWARE.
 
 namespace yave {
 
-static VkCommandPool create_pool() {
+static VkHandle<VkCommandPool> create_pool() {
     VkCommandPoolCreateInfo create_info = vk_struct();
     {
         create_info.queueFamilyIndex = command_queue().family_index();
         create_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT | VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     }
 
-    VkCommandPool pool = {};
-    vk_check(vkCreateCommandPool(vk_device(), &create_info, vk_allocation_callbacks(), &pool));
+    VkHandle<VkCommandPool> pool;
+    vk_check(vkCreateCommandPool(vk_device(), &create_info, vk_allocation_callbacks(), pool.get_ptr_for_init()));
     return pool;
 }
 
@@ -55,7 +55,7 @@ CmdBufferPool::~CmdBufferPool() {
 
     y_debug_assert(_cmd_buffers.size() == _released.size());
 
-    destroy_graphic_resource(_pool);
+    destroy_graphic_resource(std::move(_pool));
 }
 
 VkCommandPool CmdBufferPool::vk_pool() const {
@@ -85,8 +85,6 @@ void CmdBufferPool::release(CmdBufferData* data) {
 
     y_debug_assert(data->pool() == this);
     y_debug_assert(data->poll());
-
-    data->recycle_resources();
 
     {
         const auto lock = y_profile_unique_lock(_release_lock);

@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -90,6 +90,7 @@ class ImageView {
                 _format(format),
                 _view(view),
                 _image(image) {
+            y_debug_assert(_view && _image);
         }
 
 

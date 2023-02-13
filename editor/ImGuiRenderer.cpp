@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -34,9 +34,10 @@ SOFTWARE.
 #include <y/utils/log.h>
 #include <y/utils/format.h>
 
-#include <external/imgui/yave_imgui.h>
 #include <external/imgui/fa-solid-900.h>
 #include <external/imgui/jetbrains_mono.h>
+
+#include <editor/utils/ui.h>
 
 namespace editor {
 
@@ -82,8 +83,6 @@ ImGuiRenderer::ImGuiRenderer() :
         _font(load_font()),
         _font_view(_font),
         _material(create_imgui_material_data()) {
-
-    ImGui::GetIO().Fonts->TexID = &_font_view;
 }
 
 
@@ -100,7 +99,7 @@ void ImGuiRenderer::render(ImDrawData* draw_data, RenderPassRecorder& recorder) 
         return;
     }
 
-    const auto region = recorder.region("ImGui render", math::Vec4(0.7f, 0.7f, 0.7f, 1.0f));
+    const auto region = recorder.region("ImGui render", nullptr, math::Vec4(0.7f, 0.7f, 0.7f, 1.0f));
 
     const auto next_power_of_2 = [](usize size) { return 2 << log2ui(size); };
     const usize imgui_index_buffer_size = next_power_of_2(draw_data->TotalIdxCount);
@@ -120,20 +119,21 @@ void ImGuiRenderer::render(ImDrawData* draw_data, RenderPassRecorder& recorder) 
     uniform[0] = viewport_size;
     uniform[1] = viewport_offset;
 
-    const auto create_descriptor_set = [&](const void* data) {
-        const auto* tex = static_cast<const TextureView*>(data);
+    const auto create_descriptor_set = [&](const TextureView* tex) {
         return DescriptorSet(std::array{Descriptor(*tex, SamplerType::LinearClamp), Descriptor(uniform_buffer)});
     };
 
     const DescriptorSetBase default_set = create_descriptor_set(&_font_view);
 
-    const auto setup_state = [&](const void* tex) {
+    const auto setup_state = [&](const TextureView* tex) {
         recorder.bind_material_template(&_material, tex ? create_descriptor_set(tex) : default_set);
     };
 
     usize index_offset = 0;
     usize vertex_offset = 0;
-    const void* current_tex = nullptr;
+    ImTextureID current_tex = 0;
+
+    setup_state(nullptr);
 
     recorder.bind_index_buffer(index_buffer);
     recorder.bind_attrib_buffers({vertex_buffer});
@@ -161,15 +161,12 @@ void ImGuiRenderer::render(ImDrawData* draw_data, RenderPassRecorder& recorder) 
             const math::Vec2ui extent(u32(cmd.ClipRect.z - cmd.ClipRect.x), u32(cmd.ClipRect.w - cmd.ClipRect.y));
             recorder.set_scissor(offset.max(math::Vec2(0.0f)), extent);
 
-            // if(cmd.UserCallback) {
-            //     cmd.UserCallback(recorder, cmd.UserCallbackData);
-            //     current_tex = nullptr;
-            // }
-            y_debug_assert(!cmd.UserCallback);
+            y_always_assert(!cmd.UserCallback, "User callback not supported");
 
             if(cmd.ElemCount) {
                 if(current_tex != cmd.TextureId) {
-                    setup_state(current_tex = cmd.TextureId);
+                    current_tex = cmd.TextureId;
+                    setup_state(UiTexture::view(current_tex));
                 }
 
                 VkDrawIndexedIndirectCommand command = {};

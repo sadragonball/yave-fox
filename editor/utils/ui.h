@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,12 +24,73 @@ SOFTWARE.
 
 #include <editor/editor.h>
 
-#include <yave/assets/AssetId.h>
+#include <yave/graphics/images/ImageView.h>
+#include <yave/assets/AssetType.h>
+
+#include <y/core/Vector.h>
+
+#include <external/imgui/yave_imgui.h>
 
 namespace editor {
 
-int to_imgui_key(Key k);
-int to_imgui_button(MouseButton b);
+class UiTexture {
+    struct Data : NonMovable {
+        Image<ImageUsage::TextureBit | ImageUsage::TransferDstBit | ImageUsage::ColorBit> texture;
+        TextureView view;
+
+        Data() = default;
+
+        Data(ImageFormat format, const math::Vec2ui& size) : texture(format, size), view(texture) {
+        }
+
+        Data(TextureView v) : view(v) {
+        }
+    };
+
+    static core::Vector<std::unique_ptr<Data>> _all_textures;
+
+    public:
+        static void clear_all() {
+            _all_textures.clear();
+        }
+
+        static const TextureView* view(ImTextureID id) {
+            return id ? &_all_textures[id - 1]->view : nullptr;
+        }
+
+        UiTexture() = default;
+
+        UiTexture(ImageFormat format, const math::Vec2ui& size)  {
+            _all_textures.emplace_back(std::make_unique<Data>(format, size));
+            _id = ImTextureID(_all_textures.size());
+        }
+
+        UiTexture(TextureView view) {
+            _all_textures.emplace_back(std::make_unique<Data>(view));
+            _id = ImTextureID(_all_textures.size());
+        }
+
+        const auto& texture() {
+            y_debug_assert(_id);
+            y_debug_assert(!_all_textures[_id - 1]->texture.is_null());
+            return _all_textures[_id - 1]->texture;
+        }
+
+        operator bool() const {
+            return _id;
+        }
+
+        ImTextureID to_imgui() const {
+            y_debug_assert(_id);
+            return _id;
+        }
+
+    private:
+        ImTextureID _id = {};
+};
+
+ImGuiKey to_imgui_key(Key k);
+ImGuiMouseButton to_imgui_button(MouseButton b);
 
 namespace imgui {
 
@@ -44,7 +105,6 @@ bool should_open_context_menu();
 math::Vec2 client_window_pos();
 math::Vec2 from_client_pos(const math::Vec2& pos);
 
-float button_height();
 usize text_line_count(std::string_view text);
 
 bool position_input(const char* str_id, math::Vec3& position);
@@ -59,7 +119,7 @@ void end_suggestion_popup();
 
 bool suggestion_item(const char* name, const char* shortcut = nullptr);
 
-void table_begin_next_row(int row_index = 0);
+void table_begin_next_row(int col_index = 0);
 
 
 bool selectable_input(const char* str_id, bool selected, char* buf, usize buf_size);

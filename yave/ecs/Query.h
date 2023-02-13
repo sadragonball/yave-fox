@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -91,9 +91,9 @@ struct QueryUtils {
 
                 y_debug_assert(type_index<traits::component_raw_type_t<component_type>>() == container->type_id());
 
-                if(removed) {
+                if constexpr(removed) {
                     set = &container->to_be_removed();
-                } else if(changed && only_changed) {
+                } else if constexpr(changed && only_changed) {
                     set = &container->recently_mutated();
                 } else {
                     set = &container->id_set();
@@ -165,7 +165,7 @@ class Query : NonCopyable {
         };
 
         struct ComponentsReturnPolicy {
-            inline static component_tuple make(EntityId id, const component_tuple& comps) {
+            inline static component_tuple make(EntityId, const component_tuple& comps) {
                 return comps;
             }
         };

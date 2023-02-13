@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@ SOFTWARE.
 
 #include <y/utils/log.h>
 
-#include <external/imgui/yave_imgui.h>
+#include <editor/utils/ui.h>
 
 namespace editor {
 
@@ -98,7 +98,7 @@ UndoStack::UndoStack() {
 void UndoStack::clear() {
 }
 
-void UndoStack::set_editing_entity(ecs::EntityId id) {
+void UndoStack::set_editing_entity(ecs::EntityId) {
     y_profile();
 
 }
@@ -110,7 +110,7 @@ bool UndoStack::is_entity_dirty() const {
     return false;
 }
 
-void UndoStack::push_before_dirty(ecs::EntityId id) {
+void UndoStack::push_before_dirty(ecs::EntityId) {
 }
 
 void UndoStack::make_dirty() {

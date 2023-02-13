@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -50,7 +50,6 @@ core::String clean_asset_name(const core::String& name);
 struct ParsedScene {
     struct Asset {
         bool is_error = false;
-        bool import = true;
 
         core::String name = "unamed asset";
 
@@ -83,7 +82,6 @@ struct ParsedScene {
     };
 
     bool is_error = true;
-    bool import_scene = true;
 
     core::String name;
     core::String filename;

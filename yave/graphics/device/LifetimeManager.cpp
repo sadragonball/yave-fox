@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -182,7 +182,7 @@ void LifetimeManager::destroy_resource(ManagedResource& resource) const {
                 res.recycle();
             } else {
                 // log_msg(fmt("destroying % %", ct_type_name<decltype(res)>(), (void*)res));
-                vk_destroy(res);
+                vk_destroy(res.consume());
             }
         },
         resource);

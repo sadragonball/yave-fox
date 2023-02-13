@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -322,49 +322,80 @@ inline void vk_check_or_incomplete(VkResult result) {
 }
 
 
-
 template<typename T>
 class VkHandle {
     public:
+        static_assert(std::is_trivially_copyable_v<T>);
+
         VkHandle() = default;
 
-        VkHandle(T t) : _t(t) {
+        VkHandle(VkHandle&& other) {
+            swap(other);
         }
 
-        VkHandle(VkHandle&& other) {
-            std::swap(_t, other._t);
+        ~VkHandle() {
+            y_debug_assert(!_t || _consumed);
         }
 
         VkHandle& operator=(VkHandle&& other) {
-            std::swap(_t, other._t);
-            return *this;
-        }
-
-        VkHandle& operator=(T other) {
-            _t = other;
+            swap(other);
             return *this;
         }
 
         void swap(VkHandle& other) {
             std::swap(_t, other._t);
+#ifdef Y_DEBUG
+            std::swap(_consumed, other._consumed);
+#endif
         }
 
         operator T() const {
+            y_debug_assert(!_consumed);
             return _t;
         }
 
-        T& get() {
-            return _t;
+        T* get_ptr_for_init() {
+            y_debug_assert(!_t || _consumed);
+#ifdef Y_DEBUG
+            _t = {};
+            _consumed = false;
+#endif
+            return &_t;
         }
 
         const T& get() const {
+            y_debug_assert(!_consumed);
             return _t;
+        }
+
+        T consume() {
+#ifdef Y_DEBUG
+            y_debug_assert(!std::exchange(_consumed, true));
+            return _t;
+#else
+            return std::exchange(_t, T{});
+#endif
+        }
+
+        bool is_null() const {
+            return !_t;
+        }
+
+        bool operator==(const VkHandle& other) const {
+            return _t == other._t;
+        }
+
+        bool operator!=(const VkHandle& other) const {
+            return !operator==(other);
         }
 
     private:
         T _t = {};
-};
 
+#ifdef Y_DEBUG
+        bool _consumed = false;
+#endif
+};
 
 }
 

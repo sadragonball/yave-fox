@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -134,7 +134,7 @@ constexpr u32 header_type_hash() {
         return hash | 0x02;
     }
 
-    u32 hash = u32(ct_type_hash_v<naked>);
+    u32 hash = u32(ct_type_hash_v<naked> & 0xFFFFFFFF);
     if constexpr(has_serde3_v<T>) {
         hash |= 0x01;
     } else {

@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,14 +26,14 @@ SOFTWARE.
 
 namespace yave {
 
-GraphicPipeline::GraphicPipeline(VkPipeline pipeline, VkPipelineLayout layout) :
-        _pipeline(pipeline),
-        _layout(layout)  {
+GraphicPipeline::GraphicPipeline(VkHandle<VkPipeline> pipeline, VkHandle<VkPipelineLayout> layout) :
+        _pipeline(std::move(pipeline)),
+        _layout(std::move(layout))  {
 }
 
 GraphicPipeline::~GraphicPipeline() {
-    destroy_graphic_resource(_pipeline);
-    destroy_graphic_resource(_layout);
+    destroy_graphic_resource(std::move(_pipeline));
+    destroy_graphic_resource(std::move(_layout));
 }
 
 VkPipeline GraphicPipeline::vk_pipeline() const {

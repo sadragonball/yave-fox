@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -105,7 +105,7 @@ class FrameGraph : NonMovable {
 
         FrameGraphRegion region(std::string_view name);
 
-        void render(CmdBufferRecorder& recorder);
+        void render(CmdBufferRecorder& recorder, CmdTimingRecorder* time_rec = nullptr);
 
         FrameGraphPassBuilder add_pass(std::string_view name);
         FrameGraphComputePassBuilder add_compute_pass(std::string_view name);

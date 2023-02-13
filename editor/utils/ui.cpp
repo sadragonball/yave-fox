@@ -1,5 +1,5 @@
 /*******************************
-Copyright (c) 2016-2022 Grégoire Angerand
+Copyright (c) 2016-2023 Grégoire Angerand
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +33,7 @@ SOFTWARE.
 
 #include <external/imgui/imgui.h>
 #include <external/imgui/imgui_internal.h>
-#include <external/imgui/yave_imgui.h>
+
 
 #include <charconv>
 #include <cinttypes>
@@ -42,11 +42,13 @@ SOFTWARE.
 
 namespace editor {
 
-int to_imgui_key(Key k) {
+core::Vector<std::unique_ptr<UiTexture::Data>> UiTexture::_all_textures = {};
+
+ImGuiKey to_imgui_key(Key k) {
     if(u32(k) >= u32(Key::A) && u32(k) <= u32(Key::Z)) {
-        return ImGuiKey_A + (u32(k) - u32(Key::A));
+        return ImGuiKey(ImGuiKey_A + (u32(k) - u32(Key::A)));
     } else if(u32(k) >= u32(Key::F1) && u32(k) <= u32(Key::F12)) {
-        return ImGuiKey_F1 + (u32(k) - u32(Key::F1));
+        return ImGuiKey(ImGuiKey_F1 + (u32(k) - u32(Key::F1)));
     }
 
     switch(k) {
@@ -79,9 +81,9 @@ int to_imgui_key(Key k) {
         case Key::Delete:
             return ImGuiKey_Delete;
         case Key::Alt:
-            return ImGuiKey_ModAlt;
+            return ImGuiKey_LeftAlt;
         case Key::Ctrl:
-            return ImGuiKey_ModCtrl;
+            return ImGuiKey_LeftCtrl;
         case Key::Space:
             return ImGuiKey_Space;
 
@@ -93,7 +95,7 @@ int to_imgui_key(Key k) {
     return ImGuiKey_None;
 }
 
-int to_imgui_button(MouseButton b) {
+ImGuiMouseButton to_imgui_button(MouseButton b) {
     switch(b) {
         case MouseButton::LeftButton:
             return ImGuiMouseButton_Left;
@@ -135,10 +137,6 @@ math::Vec2 client_window_pos() {
 
 math::Vec2 from_client_pos(const math::Vec2& pos) {
     return client_window_pos() + pos;
-}
-
-float button_height() {
-    return ImGui::GetFont()->FontSize + ImGui::GetStyle().FramePadding.y * 2.0f + 4.0f;
 }
 
 usize text_line_count(std::string_view text) {
@@ -212,7 +210,7 @@ bool asset_selector(AssetId id, AssetType type, std::string_view text, bool* cle
     bool ret = false;
     if(is_valid) {
         if(const TextureView* img = thumbmail_renderer().thumbmail(id)) {
-            ret = ImGui::ImageButton("##tex", const_cast<TextureView*>(img), button_size);
+            ret = ImGui::ImageButton("##tex", UiTexture(*img).to_imgui(), button_size);
         } else {
             ret = ImGui::Button(ICON_FA_HOURGLASS_HALF, padded_button_size);
         }
@@ -474,9 +472,9 @@ bool suggestion_item(const char* name, const char* shortcut) {
 }
 
 
-void table_begin_next_row(int row_index) {
+void table_begin_next_row(int col_index) {
     ImGui::TableNextRow();
-    ImGui::TableSetColumnIndex(row_index);
+    ImGui::TableSetColumnIndex(col_index);
 }
 
 
